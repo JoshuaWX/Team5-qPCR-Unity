@@ -1,0 +1,69 @@
+So everyone. We have to kickstart with our project. Time is not on our side anymore as we have to submit the project by Monday. I think the other teams have started as well.
+
+Welcome to the new guys just joining <@1388547084831166496> . Please go through the slide sent and also the link to the class which was also sent here, watch so you understand exactly our team task. The idea is that we are simulating the steps involved in loading and running our samples on the pcr till we get a final result/output.
+
+Deliverables 
+A. Deadline is 11:59 today for the scientists.
+1. Scientists among us,  <@1554803661857620114> <@1554473101155115078> <@1552508773749366886> <@1552242874572210250>, please provide and verify the exact steps from loading the samples on the 96 well plates to inserting the plate inside the RT-PCR machine. Also list all the equipment we need.
+2. What parmeters are we changing on the Pcr screen (temperature, number of cycles, etc). 
+3. Please anyone include something or modify this if I am missing anything crucial. 
+
+B. Blender artists <@1551700830078369917> <@1271777752990748760> <@1388547084831166496> 
+1. <@994261311334645760> provided with some models already. We can tweak those we need a bit. then i dont think the model for the main RT-PCR machine was provided. So we have to design that, alongside some others like the microwell plates. 
+I strongly feel we should start designing ASAP.  
+
+C. Unity guys <@1028725349938368532> <@1004556084008210513> 
+We'll share the models we already have, so you guys can start somewhere, designing the lab layout, etc. So we'll feed you guys the additional models as soon as we complete each. 
+
+Please this plan is just a draft. Can we all work with this?
+
+
+
+
+https://docs.google.com/document/d/1SWCNROlgeuOP_KxDg-7m1LVk--InhSWC/edit
+
+
+Check out this link:
+https://youtu.be/TkCBcL_xUUs?si=veAbb8VQPefOUSIN
+
+
+Also watch this, especially the last stage
+
+https://youtu.be/AaBXRe_JVWI?si=xkMfiCLj3WG-BlYQ
+
+ It was emphasized during Day 2 that RT-PCR should be used instead of PCR. Other teams were told to also make necessary adjustments 
+It is to be noted that Real time PCR also operates in the manner of programming as PCR except that RT-PCR amplifies AND measures/quantifies the cDNA in real-time during the run using fluorescence. 
+
+
+Thank you so much @(F) EBIDAH PEACE-Team 5 (SciCom) @(F) Dr Seun C Joshua - Team 5-Sc @(F)Awoyemi Peace- Team 5 Sci . This is very detailed and clear. 
+
+so I have watched the videos and read the documents. 
+
+We have the following already 
+Pipette and pipette tips for
+Rack and Tubes
+Lab bench and chair
+Sink ethanol
+
+
+So we are to build the 
+RT PCR.
+96 well plates. (Started already and making progress)
+the seal for the well plate,
+PCR Screen
+
+
+I think thats all. Please if I am missing anything, let me know. @(M)James Olayiwola-Team5-3D @(M) Ayomide Ashamo Team5 BD @(M) Olufunso Goodness- Team 5-3D 
+
+Get in lets see how far we can go with building. Please let us know what part you can start with so We'll know who's working on what. Remember to ask our mentors to assist with trouble shooting. 
+
+@(M) Joshua Ejiyooye Team 5 Unity @(M) Emmanuel Olufisoye Team5 Uni @(M) Ayoyiwaka Awodele - 5 Unity 
+
+Also do likewise. let us know what part you're building. Please like we agreed earlier, you shouldn't wait for the blender guys, please start with the models we have and setting up the lab so we hand over the models to you once they're complete. I think the major task involves washing hands, wearing gloves, turning the pcr on, opening the lid, inserting the already loaded plate into the RT-PCR, closing the lid, and interacting with the screen to adjust the settings as described by @(F) EBIDAH PEACE-Team 5 (SciCom) @(F) Dr Seun C Joshua - Team 5-Sc @(F)Awoyemi Peace- Team 5 Sci . then getting a final result display on the screen. then putting it off.
+
+
+assetstore.unity.com
+sketchfab.com
+
+as shared yesterday, please lets get models from here if possible @ unity guys
+
