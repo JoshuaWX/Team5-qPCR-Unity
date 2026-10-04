@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -10,8 +11,14 @@ namespace Team5.qPCR
         [SerializeField] private AmplificationCurveGraphic curveGraphic;
         [SerializeField] private TMP_Text summaryText;
         [SerializeField] private TMP_Text calloutText;
+        [SerializeField] private AmplificationCurveGraphic secondaryCurveGraphic;
+        [SerializeField] private TMP_Text secondarySummaryText;
+        [SerializeField] private TMP_Text secondaryCalloutText;
 
         public IReadOnlyList<AssayResult> CurrentResults { get; private set; }
+        public bool ControlsValid => CurrentResults != null &&
+            CurrentResults.Any(x=>x.WellType==WellType.PositiveControl && x.IsAmplified) &&
+            CurrentResults.Any(x=>x.WellType==WellType.NoTemplateControl && !x.IsAmplified);
 
         public void Configure(GameObject panel, AmplificationCurveGraphic graphic, TMP_Text summary, TMP_Text callout)
         {
@@ -21,18 +28,41 @@ namespace Team5.qPCR
             calloutText = callout;
         }
 
+        public void ConfigureSecondaryView(AmplificationCurveGraphic graphic, TMP_Text summary, TMP_Text callout)
+        {
+            secondaryCurveGraphic = graphic;
+            secondarySummaryText = summary;
+            secondaryCalloutText = callout;
+        }
+
         public void ResetResults()
         {
             CurrentResults = null;
             curveGraphic?.ClearSeries();
-            if (summaryText != null)
-            {
-                summaryText.text = "AWAITING RUN\n40 cycles • real-time fluorescence";
-            }
+            secondaryCurveGraphic?.ClearSeries();
+            SetSummary("AWAITING RUN\n35 cycles • real-time fluorescence");
+            SetCallout("Threshold 0.22 ΔRn\nPositive samples cross the threshold; valid NTC wells remain flat.");
+        }
 
-            if (calloutText != null)
+        public void BeginRun(IReadOnlyList<AssayResult> results)
+        {
+            CurrentResults = results;
+            var curves = BuildRepresentativeCurves(results);
+            curveGraphic?.SetSeries(curves);
+            secondaryCurveGraphic?.SetSeries(curves);
+            curveGraphic?.SetVisiblePointCount(1);
+            secondaryCurveGraphic?.SetVisiblePointCount(1);
+            SetSummary("RUNNING · CYCLE 01 / 35\nFluorescence is collected at 60°C");
+            SetCallout("Threshold 0.22 ΔRn\nCurves appear one cycle at a time.");
+        }
+
+        public void UpdateVisibleCycle(int cycle)
+        {
+            curveGraphic?.SetVisiblePointCount(cycle + 1);
+            secondaryCurveGraphic?.SetVisiblePointCount(cycle + 1);
+            if (CurrentResults != null)
             {
-                calloutText.text = "Threshold 0.22 ΔRn\nPositive samples cross the threshold; valid NTC wells remain flat.";
+                SetSummary($"RUNNING · CYCLE {cycle:00} / 35\nFluorescence is collected at 60°C");
             }
         }
 
@@ -75,22 +105,51 @@ namespace Team5.qPCR
                 }
             }
 
+            var representativeCurves = BuildRepresentativeCurves(results);
+            curveGraphic?.SetSeries(representativeCurves);
+            secondaryCurveGraphic?.SetSeries(representativeCurves);
+            curveGraphic?.SetVisiblePointCount(int.MaxValue);
+            secondaryCurveGraphic?.SetVisiblePointCount(int.MaxValue);
+
+            var controlsValid = positiveControl != null && positiveControl.IsAmplified && noTemplateControl != null && !noTemplateControl.IsAmplified;
+            SetSummary($"Run complete · Controls {(controlsValid ? "passed" : "failed")}\n{positiveSamples:00} amplified samples   {negativeSamples:00} not amplified   02 controls");
+            var cq = representativeSample == null ? "—" : representativeSample.Cq.ToString("0.0");
+            var controlCq = positiveControl == null ? "—" : positiveControl.Cq.ToString("0.0");
+            SetCallout($"Example sample Cq: {cq}   ·   Positive control Cq: {controlCq}   ·   NTC: {(noTemplateControl != null && !noTemplateControl.IsAmplified ? "flat" : "check required")}\nThreshold: 0.22 ΔRn. SYBR signal alone does not establish product identity.\nRepresentative teaching data, not a diagnostic cutoff or patient result.");
+        }
+
+        private static List<CurveSeries> BuildRepresentativeCurves(IReadOnlyList<AssayResult> results)
+        {
             var curves = new List<CurveSeries>();
-            AddCurve(curves, positiveControl, "Positive control", new Color(0.21f, 0.94f, 0.74f, 1f));
-            AddCurve(curves, representativeSample, "Representative positive", new Color(0.26f, 0.72f, 1f, 1f));
-            AddCurve(curves, noTemplateControl, "No-template control", new Color(0.95f, 0.48f, 0.55f, 1f));
-            curveGraphic?.SetSeries(curves);
-
-            if (summaryText != null)
+            if (results == null)
             {
-                summaryText.text = $"RUN COMPLETE  •  CONTROLS VALID\n{positiveSamples:00} positive samples   {negativeSamples:00} negative samples   04 controls";
+                return curves;
             }
 
-            if (calloutText != null)
+            AssayResult positiveControl = null;
+            AssayResult representativeSample = null;
+            AssayResult noTemplateControl = null;
+            for (var index = 0; index < results.Count; index++)
             {
-                var cq = representativeSample == null ? "—" : representativeSample.Cq.ToString("0.0");
-                calloutText.text = $"Representative sample Cq: {cq}\nNTC: no amplification detected\nEducational simulation — not for diagnostic use.";
+                var result = results[index];
+                if (result.WellType == WellType.PositiveControl && positiveControl == null)
+                {
+                    positiveControl = result;
+                }
+                else if (result.WellType == WellType.NoTemplateControl && noTemplateControl == null)
+                {
+                    noTemplateControl = result;
+                }
+                else if (result.WellType == WellType.Sample && result.Classification == AssayClassification.Positive && representativeSample == null)
+                {
+                    representativeSample = result;
+                }
             }
+
+            AddCurve(curves, positiveControl, "Positive control", new Color(0.08f, 0.20f, 0.38f, 1f));
+            AddCurve(curves, representativeSample, "Representative positive", new Color(0.11f, 0.37f, 0.81f, 1f));
+            AddCurve(curves, noTemplateControl, "No-template control", new Color(0.54f, 0.27f, 0.15f, 1f));
+            return curves;
         }
 
         private static void AddCurve(List<CurveSeries> curves, AssayResult result, string label, Color color)
@@ -106,6 +165,18 @@ namespace Team5.qPCR
                 Color = color,
                 Values = new List<float>(result.Fluorescence)
             });
+        }
+
+        private void SetSummary(string value)
+        {
+            if (summaryText != null) summaryText.text = value;
+            if (secondarySummaryText != null) secondarySummaryText.text = value;
+        }
+
+        private void SetCallout(string value)
+        {
+            if (calloutText != null) calloutText.text = value;
+            if (secondaryCalloutText != null) secondaryCalloutText.text = value;
         }
     }
 }

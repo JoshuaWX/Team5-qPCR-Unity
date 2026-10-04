@@ -20,6 +20,7 @@ namespace Team5.qPCR
         [SerializeField] private Color thresholdColor = new Color(0.96f, 0.77f, 0.25f, 0.75f);
         [SerializeField, Min(0.5f)] private float lineWidth = 2.5f;
         [SerializeField] private Vector4 padding = new Vector4(44f, 24f, 24f, 34f);
+        [SerializeField] private int visiblePointCount = int.MaxValue;
 
         public void SetSeries(IEnumerable<CurveSeries> curves)
         {
@@ -27,9 +28,16 @@ namespace Team5.qPCR
             SetVerticesDirty();
         }
 
+        public void SetVisiblePointCount(int count)
+        {
+            visiblePointCount = Mathf.Max(1, count);
+            SetVerticesDirty();
+        }
+
         public void ClearSeries()
         {
             series.Clear();
+            visiblePointCount = int.MaxValue;
             SetVerticesDirty();
         }
 
@@ -66,7 +74,8 @@ namespace Team5.qPCR
                     continue;
                 }
 
-                for (var pointIndex = 1; pointIndex < curve.Values.Count; pointIndex++)
+                var pointsToDraw = Mathf.Min(curve.Values.Count, visiblePointCount);
+                for (var pointIndex = 1; pointIndex < pointsToDraw; pointIndex++)
                 {
                     var previous = new Vector2(
                         Mathf.Lerp(plot.xMin, plot.xMax, (pointIndex - 1f) / (curve.Values.Count - 1f)),

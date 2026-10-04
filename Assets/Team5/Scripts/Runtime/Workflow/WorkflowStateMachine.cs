@@ -3,13 +3,14 @@ namespace Team5.qPCR
     public enum WorkflowStage
     {
         Introduction,
-        PlateReview,
-        PlateLoading,
-        PlateSealing,
+        HandoffReview,
+        PowerOn,
+        ProtocolSetup,
+        PlateInspection,
         InstrumentLoading,
-        RunSetup,
+        RunValidation,
         Amplification,
-        Results,
+        ResultsInterpretation,
         Complete
     }
 
@@ -35,7 +36,7 @@ namespace Team5.qPCR
                 return false;
             }
 
-            CurrentStage = WorkflowStage.Results;
+            CurrentStage = WorkflowStage.ResultsInterpretation;
             return true;
         }
 
@@ -47,6 +48,11 @@ namespace Team5.qPCR
 
     public static class RunEligibility
     {
+        public static bool CanStart(bool platePrepared, bool plateInspected, bool plateInserted, bool drawerClosed, bool protocolValid)
+        {
+            return platePrepared && plateInspected && plateInserted && drawerClosed && protocolValid;
+        }
+
         public static bool CanStart(bool allWellsLoaded, bool plateSealed, bool plateInserted)
         {
             return allWellsLoaded && plateSealed && plateInserted;

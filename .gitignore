@@ -20,6 +20,8 @@
 /[Bb]uild/
 /[Bb]uilds/
 /[Ll]ogs/
+/TestResults/
+/SmokeResults/
 /[Uu]ser[Ss]ettings/
 *.log
 

@@ -17,6 +17,15 @@ namespace Team5.qPCR
             ApplyTransform();
         }
 
+        public void Configure(Transform focusTarget, float initialYaw, float initialPitch, float initialDistance)
+        {
+            focus = focusTarget;
+            yaw = initialYaw;
+            pitch = initialPitch;
+            distance = initialDistance;
+            ApplyTransform();
+        }
+
         private void LateUpdate()
         {
             var mouse = Mouse.current;

@@ -1,0 +1,25 @@
+{
+  "name": "Team5.qPCR.PlayModeTests",
+  "rootNamespace": "Team5.qPCR.PlayModeTests",
+  "references": [
+    "Team5.qPCR.Runtime",
+    "Unity.TextMeshPro",
+    "Unity.ugui",
+    "Unity.InputSystem",
+    "Unity.XR.Interaction.Toolkit"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

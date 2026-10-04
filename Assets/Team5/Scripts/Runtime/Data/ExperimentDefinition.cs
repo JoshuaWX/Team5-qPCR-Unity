@@ -8,7 +8,8 @@ namespace Team5.qPCR
     {
         Sample,
         PositiveControl,
-        NoTemplateControl
+        NoTemplateControl,
+        Unused
     }
 
     [Serializable]
@@ -34,6 +35,27 @@ namespace Team5.qPCR
         public string EducationalDisclaimer => educationalDisclaimer;
         public IReadOnlyList<WellDefinition> Wells => wells;
         public bool IsValid96WellPlate => wells != null && wells.Length == 96 && HasUniqueCoordinates();
+        public int ActiveReactionCount
+        {
+            get
+            {
+                if (wells == null)
+                {
+                    return 0;
+                }
+
+                var count = 0;
+                for (var index = 0; index < wells.Length; index++)
+                {
+                    if (wells[index] != null && wells[index].Type != WellType.Unused)
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
+            }
+        }
 
         public void Configure(string name, string disclaimer, WellDefinition[] definitions)
         {

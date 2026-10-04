@@ -12,8 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bb595f966f86ea419b36fde5b2915d4, type: 3}
   m_Name: Team5_RunProtocol
   m_EditorClassIdentifier: Team5.qPCR.Runtime::Team5.qPCR.RunProtocol
-  cycles: 40
+  cycles: 35
+  reactionVolumeMicrolitres: 20
+  lidTemperature: 105
+  fluorophore: SYBR Green
+  initialHoldTemperature: 95
+  initialHoldSeconds: 120
   denaturationTemperature: 95
+  denaturationSeconds: 15
   annealingTemperature: 60
+  annealingSeconds: 30
   extensionTemperature: 72
-  simulatedDurationSeconds: 10
+  extensionSeconds: 30
+  acquisitionTemperature: 60
+  meltCurveStartTemperature: 65
+  meltCurveEndTemperature: 95
+  simulatedDurationSeconds: 30

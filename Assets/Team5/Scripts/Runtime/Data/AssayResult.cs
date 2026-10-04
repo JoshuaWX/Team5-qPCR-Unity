@@ -32,7 +32,7 @@ namespace Team5.qPCR
 
         public static List<AssayResult> Generate(ExperimentDefinition experiment, int seed = DefaultSeed)
         {
-            var results = new List<AssayResult>(96);
+            var results = new List<AssayResult>(28);
             if (experiment == null || experiment.Wells == null)
             {
                 return results;
@@ -42,6 +42,11 @@ namespace Team5.qPCR
             for (var index = 0; index < experiment.Wells.Count; index++)
             {
                 var well = experiment.Wells[index];
+                if (well == null || well.Type == WellType.Unused)
+                {
+                    continue;
+                }
+
                 var result = new AssayResult
                 {
                     WellId = well.WellId,
@@ -73,7 +78,7 @@ namespace Team5.qPCR
                     result.Cq = -1f;
                 }
 
-                for (var cycle = 0; cycle <= 40; cycle++)
+                for (var cycle = 0; cycle <= 35; cycle++)
                 {
                     var baselineNoise = ((float)random.NextDouble() - 0.5f) * 0.012f;
                     var fluorescence = 0.035f + baselineNoise;

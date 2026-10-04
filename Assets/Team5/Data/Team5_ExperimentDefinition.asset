@@ -12,583 +12,582 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82dbcd469d0adcd4ba4970aae2fb7daf, type: 3}
   m_Name: Team5_ExperimentDefinition
   m_EditorClassIdentifier: Team5.qPCR.Runtime::Team5.qPCR.ExperimentDefinition
-  assayName: Team 5 Educational qPCR Panel
-  educationalDisclaimer: Educational simulation only. Curves and Cq values are representative
-    and must not be used for diagnosis.
+  assayName: Team 5 Educational SYBR Green qPCR
+  educationalDisclaimer: "Representative educational data only \u2014 not for diagnosis."
   wells:
   - Row: 0
     Column: 0
     WellId: A1
-    SampleId: PC-1
+    SampleId: PTC
     Type: 1
-    DisplayColor: {r: 0.17254902, g: 0.8980392, b: 0.78039217, a: 1}
+    DisplayColor: {r: 0.14901961, g: 0.84313726, b: 0.7764706, a: 1}
   - Row: 0
     Column: 1
     WellId: A2
-    SampleId: PC-2
-    Type: 1
-    DisplayColor: {r: 0.17254902, g: 0.8980392, b: 0.78039217, a: 1}
+    SampleId: S-01
+    Type: 0
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 2
     WellId: A3
-    SampleId: S-001
+    SampleId: S-02
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 3
     WellId: A4
-    SampleId: S-002
+    SampleId: S-03
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 4
     WellId: A5
-    SampleId: S-003
+    SampleId: S-04
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 5
     WellId: A6
-    SampleId: S-004
+    SampleId: S-05
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 6
     WellId: A7
-    SampleId: S-005
+    SampleId: S-06
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 7
     WellId: A8
-    SampleId: S-006
+    SampleId: S-07
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 8
     WellId: A9
-    SampleId: S-007
+    SampleId: S-08
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 9
     WellId: A10
-    SampleId: S-008
+    SampleId: S-09
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 10
     WellId: A11
-    SampleId: S-009
+    SampleId: S-10
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 0
     Column: 11
     WellId: A12
-    SampleId: S-010
+    SampleId: S-11
     Type: 0
-    DisplayColor: {r: 0.24117647, g: 0.61419606, b: 0.82, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 0
     WellId: B1
-    SampleId: S-011
+    SampleId: S-12
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 1
     WellId: B2
-    SampleId: S-012
+    SampleId: S-13
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 2
     WellId: B3
-    SampleId: S-013
+    SampleId: S-14
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 3
     WellId: B4
-    SampleId: S-014
+    SampleId: S-15
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 4
     WellId: B5
-    SampleId: S-015
+    SampleId: S-16
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 5
     WellId: B6
-    SampleId: S-016
+    SampleId: S-17
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 6
     WellId: B7
-    SampleId: S-017
+    SampleId: S-18
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 7
     WellId: B8
-    SampleId: S-018
+    SampleId: S-19
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 8
     WellId: B9
-    SampleId: S-019
+    SampleId: S-20
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 9
     WellId: B10
-    SampleId: S-020
+    SampleId: S-21
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 10
     WellId: B11
-    SampleId: S-021
+    SampleId: S-22
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 1
     Column: 11
     WellId: B12
-    SampleId: S-022
+    SampleId: S-23
     Type: 0
-    DisplayColor: {r: 0.22693558, g: 0.63165265, b: 0.7942745, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 2
     Column: 0
     WellId: C1
-    SampleId: S-023
+    SampleId: S-24
     Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 2
     Column: 1
     WellId: C2
-    SampleId: S-024
+    SampleId: S-25
     Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 2
     Column: 2
     WellId: C3
-    SampleId: S-025
+    SampleId: S-26
     Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    DisplayColor: {r: 0.3019608, g: 0.65882355, b: 1, a: 1}
   - Row: 2
     Column: 3
     WellId: C4
-    SampleId: S-026
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: NTC
+    Type: 2
+    DisplayColor: {r: 1, g: 0.3882353, b: 0.4627451, a: 1}
   - Row: 2
     Column: 4
     WellId: C5
-    SampleId: S-027
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 2
     Column: 5
     WellId: C6
-    SampleId: S-028
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 2
     Column: 6
     WellId: C7
-    SampleId: S-029
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 2
     Column: 7
     WellId: C8
-    SampleId: S-030
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 2
     Column: 8
     WellId: C9
-    SampleId: S-031
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 2
     Column: 9
     WellId: C10
-    SampleId: S-032
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 2
     Column: 10
     WellId: C11
-    SampleId: S-033
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 2
     Column: 11
     WellId: C12
-    SampleId: S-034
-    Type: 0
-    DisplayColor: {r: 0.21269469, g: 0.64910924, b: 0.768549, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 0
     WellId: D1
-    SampleId: S-035
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 1
     WellId: D2
-    SampleId: S-036
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 2
     WellId: D3
-    SampleId: S-037
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 3
     WellId: D4
-    SampleId: S-038
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 4
     WellId: D5
-    SampleId: S-039
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 5
     WellId: D6
-    SampleId: S-040
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 6
     WellId: D7
-    SampleId: S-041
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 7
     WellId: D8
-    SampleId: S-042
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 8
     WellId: D9
-    SampleId: S-043
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 9
     WellId: D10
-    SampleId: S-044
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 10
     WellId: D11
-    SampleId: S-045
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 3
     Column: 11
     WellId: D12
-    SampleId: S-046
-    Type: 0
-    DisplayColor: {r: 0.1984538, g: 0.66656584, b: 0.74282354, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 0
     WellId: E1
-    SampleId: S-047
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 1
     WellId: E2
-    SampleId: S-048
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 2
     WellId: E3
-    SampleId: S-049
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 3
     WellId: E4
-    SampleId: S-050
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 4
     WellId: E5
-    SampleId: S-051
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 5
     WellId: E6
-    SampleId: S-052
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 6
     WellId: E7
-    SampleId: S-053
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 7
     WellId: E8
-    SampleId: S-054
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 8
     WellId: E9
-    SampleId: S-055
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 9
     WellId: E10
-    SampleId: S-056
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 10
     WellId: E11
-    SampleId: S-057
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 4
     Column: 11
     WellId: E12
-    SampleId: S-058
-    Type: 0
-    DisplayColor: {r: 0.18421288, g: 0.6840224, b: 0.71709806, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 0
     WellId: F1
-    SampleId: S-059
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 1
     WellId: F2
-    SampleId: S-060
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 2
     WellId: F3
-    SampleId: S-061
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 3
     WellId: F4
-    SampleId: S-062
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 4
     WellId: F5
-    SampleId: S-063
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 5
     WellId: F6
-    SampleId: S-064
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 6
     WellId: F7
-    SampleId: S-065
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 7
     WellId: F8
-    SampleId: S-066
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 8
     WellId: F9
-    SampleId: S-067
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 9
     WellId: F10
-    SampleId: S-068
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 10
     WellId: F11
-    SampleId: S-069
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 5
     Column: 11
     WellId: F12
-    SampleId: S-070
-    Type: 0
-    DisplayColor: {r: 0.16997199, g: 0.701479, b: 0.6913726, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 0
     WellId: G1
-    SampleId: S-071
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 1
     WellId: G2
-    SampleId: S-072
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 2
     WellId: G3
-    SampleId: S-073
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 3
     WellId: G4
-    SampleId: S-074
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 4
     WellId: G5
-    SampleId: S-075
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 5
     WellId: G6
-    SampleId: S-076
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 6
     WellId: G7
-    SampleId: S-077
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 7
     WellId: G8
-    SampleId: S-078
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 8
     WellId: G9
-    SampleId: S-079
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 9
     WellId: G10
-    SampleId: S-080
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 10
     WellId: G11
-    SampleId: S-081
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 6
     Column: 11
     WellId: G12
-    SampleId: S-082
-    Type: 0
-    DisplayColor: {r: 0.1557311, g: 0.71893555, b: 0.6656471, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 0
     WellId: H1
-    SampleId: S-083
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 1
     WellId: H2
-    SampleId: S-084
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 2
     WellId: H3
-    SampleId: S-085
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 3
     WellId: H4
-    SampleId: S-086
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 4
     WellId: H5
-    SampleId: S-087
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 5
     WellId: H6
-    SampleId: S-088
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 6
     WellId: H7
-    SampleId: S-089
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 7
     WellId: H8
-    SampleId: S-090
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 8
     WellId: H9
-    SampleId: S-091
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 9
     WellId: H10
-    SampleId: S-092
-    Type: 0
-    DisplayColor: {r: 0.14149019, g: 0.73639214, b: 0.63992155, a: 0.82}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 10
     WellId: H11
-    SampleId: NTC-1
-    Type: 2
-    DisplayColor: {r: 1, g: 0.43529412, b: 0.5254902, a: 1}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}
   - Row: 7
     Column: 11
     WellId: H12
-    SampleId: NTC-2
-    Type: 2
-    DisplayColor: {r: 1, g: 0.43529412, b: 0.5254902, a: 1}
+    SampleId: UNUSED
+    Type: 3
+    DisplayColor: {r: 0.14901961, g: 0.21960784, b: 0.24313726, a: 1}

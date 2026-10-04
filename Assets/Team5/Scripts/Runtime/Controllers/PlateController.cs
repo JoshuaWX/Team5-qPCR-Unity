@@ -7,16 +7,25 @@ namespace Team5.qPCR
     public sealed class PlateController : MonoBehaviour
     {
         [SerializeField] private ExperimentDefinition experiment;
+        [SerializeField] private PlateHandoffData handoff;
         [SerializeField] private Transform wellsRoot;
         [SerializeField] private Renderer[] wellRenderers = Array.Empty<Renderer>();
         [SerializeField] private Renderer opticalSealRenderer;
-        [SerializeField] private Color emptyWellColor = new Color(0.12f, 0.18f, 0.22f, 1f);
+        [SerializeField] private Transform orientationMarker;
+        [SerializeField] private Color unusedWellColor = new Color(0.08f, 0.12f, 0.14f, 1f);
 
         private MaterialPropertyBlock propertyBlock;
+        private Quaternion alignedRotation;
 
-        public bool AllWellsLoaded { get; private set; }
-        public bool IsSealed { get; private set; }
+        public bool IsPrepared => handoff != null && handoff.IsReady && experiment != null && experiment.IsValid96WellPlate
+            && experiment.ActiveReactionCount == handoff.ActiveReactionCount;
+        public PlateHandoffData Handoff => handoff;
+        public bool AllWellsLoaded => IsPrepared;
+        public bool IsSealed => handoff != null && handoff.IsSealed;
+        public bool IsInspected { get; private set; }
+        public bool IsA1Aligned { get; private set; }
         public int WellCount => wellRenderers == null ? 0 : wellRenderers.Length;
+        public int ActiveReactionCount => experiment == null ? 0 : experiment.ActiveReactionCount;
 
         public void Configure(
             ExperimentDefinition definition,
@@ -24,81 +33,123 @@ namespace Team5.qPCR
             Renderer[] renderers,
             Renderer sealRenderer)
         {
+            Configure(definition, null, generatedWellsRoot, renderers, sealRenderer, null);
+        }
+
+        public void Configure(
+            ExperimentDefinition definition,
+            PlateHandoffData handoffData,
+            Transform generatedWellsRoot,
+            Renderer[] renderers,
+            Renderer sealRenderer,
+            Transform marker)
+        {
             experiment = definition;
+            handoff = handoffData;
             wellsRoot = generatedWellsRoot;
             wellRenderers = renderers ?? Array.Empty<Renderer>();
             opticalSealRenderer = sealRenderer;
+            orientationMarker = marker;
+            alignedRotation = transform.localRotation;
         }
 
         private void Awake()
         {
             propertyBlock = new MaterialPropertyBlock();
+            alignedRotation = transform.localRotation;
             ResetPlate();
+        }
+
+        public bool InspectPlate()
+        {
+            if (!IsPrepared || !IsA1Aligned)
+            {
+                return false;
+            }
+
+            IsInspected = true;
+            return true;
+        }
+
+        public void AlignA1()
+        {
+            IsA1Aligned = true;
+            transform.localRotation = alignedRotation;
+            if (orientationMarker != null)
+            {
+                orientationMarker.gameObject.SetActive(true);
+            }
+        }
+
+        public void SetA1Aligned(bool aligned)
+        {
+            IsA1Aligned = aligned;
+            transform.localRotation = aligned ? alignedRotation : alignedRotation * Quaternion.Euler(0f, 180f, 0f);
+        }
+
+        public void MarkOrientationFromPose()
+        {
+            IsA1Aligned = Quaternion.Angle(transform.localRotation, alignedRotation) <= 15f;
+            if(!IsA1Aligned)IsInspected=false;
         }
 
         public void LoadAllWells(Action completed)
         {
             StopAllCoroutines();
-            StartCoroutine(LoadRoutine(completed));
+            StartCoroutine(ShowPreparedPlateRoutine(completed));
         }
 
         public bool ApplySeal()
         {
-            if (!AllWellsLoaded)
-            {
-                return false;
-            }
-
-            IsSealed = true;
-            if (opticalSealRenderer != null)
-            {
-                opticalSealRenderer.gameObject.SetActive(true);
-            }
-
-            return true;
+            return IsSealed;
         }
 
         public void ResetPlate()
         {
             StopAllCoroutines();
-            AllWellsLoaded = false;
-            IsSealed = false;
+            IsInspected = false;
+            IsA1Aligned = false;
+            transform.localRotation = alignedRotation * Quaternion.Euler(0f, 180f, 0f);
 
             if (opticalSealRenderer != null)
             {
-                opticalSealRenderer.gameObject.SetActive(false);
+                opticalSealRenderer.gameObject.SetActive(IsSealed);
             }
 
-            if (wellRenderers == null)
+            if (orientationMarker != null)
+            {
+                orientationMarker.gameObject.SetActive(true);
+            }
+
+            ApplyPreparedWellColours();
+        }
+
+        private IEnumerator ShowPreparedPlateRoutine(Action completed)
+        {
+            ApplyPreparedWellColours();
+            yield return new WaitForSeconds(0.25f);
+            completed?.Invoke();
+        }
+
+        private void ApplyPreparedWellColours()
+        {
+            if (experiment == null || wellRenderers == null)
             {
                 return;
             }
 
             for (var index = 0; index < wellRenderers.Length; index++)
             {
-                SetWellColor(index, emptyWellColor);
-            }
-        }
-
-        private IEnumerator LoadRoutine(Action completed)
-        {
-            if (experiment == null || !experiment.IsValid96WellPlate || wellRenderers.Length != 96)
-            {
-                Debug.LogError("[Team 5] A valid 96-well experiment and 96 renderers are required.");
-                yield break;
-            }
-
-            for (var index = 0; index < wellRenderers.Length; index++)
-            {
-                SetWellColor(index, experiment.Wells[index].DisplayColor);
-                if (index % 6 == 5)
+                var color = unusedWellColor;
+                if (index < experiment.Wells.Count && experiment.Wells[index] != null)
                 {
-                    yield return new WaitForSeconds(0.045f);
+                    color = experiment.Wells[index].Type == WellType.Unused
+                        ? unusedWellColor
+                        : new Color(.76f, .86f, .90f, 1f);
                 }
-            }
 
-            AllWellsLoaded = true;
-            completed?.Invoke();
+                SetWellColor(index, color);
+            }
         }
 
         private void SetWellColor(int index, Color color)
@@ -111,7 +162,7 @@ namespace Team5.qPCR
             propertyBlock ??= new MaterialPropertyBlock();
             propertyBlock.Clear();
             propertyBlock.SetColor("_BaseColor", color);
-            propertyBlock.SetColor("_EmissionColor", color * 0.18f);
+            propertyBlock.SetColor("_EmissionColor", Color.black);
             wellRenderers[index].SetPropertyBlock(propertyBlock);
         }
     }
