@@ -14,10 +14,13 @@ namespace Team5.qPCR
         [SerializeField] private Vector3 drawerOpenOffset = new Vector3(0f, 0f, -1.1f);
 
         private Vector3 drawerClosedPosition;
+        private Coroutine drawerRoutine;
 
         public bool IsPowered { get; private set; }
         public bool IsPlateInserted { get; private set; }
         public bool IsDrawerClosed { get; private set; } = true;
+        public bool IsDrawerOpen => !IsDrawerClosed;
+        public bool IsMoving => drawerRoutine != null;
 
         public void Configure(Transform plate, Transform home, Transform instrumentAnchor, Transform instrumentDrawer)
         {
@@ -53,6 +56,49 @@ namespace Team5.qPCR
             SetIndicator(new Color(0.12f, 1f, 0.72f));
         }
 
+        public bool OpenDrawer(Action completed = null)
+        {
+            if (!IsPowered || IsMoving || !IsDrawerClosed)
+            {
+                completed?.Invoke();
+                return false;
+            }
+
+            drawerRoutine = StartCoroutine(MoveDrawer(false, completed));
+            return true;
+        }
+
+        public bool ConfirmPlateSocketed(Transform plate)
+        {
+            if (!IsPowered || IsDrawerClosed || plate == null || instrumentPlateAnchor == null)
+            {
+                return false;
+            }
+
+            plateTransform = plate;
+            plateTransform.SetParent(instrumentPlateAnchor, true);
+            plateTransform.SetPositionAndRotation(instrumentPlateAnchor.position, instrumentPlateAnchor.rotation);
+            IsPlateInserted = true;
+            return true;
+        }
+
+        public bool CloseDrawer(Action completed = null)
+        {
+            if (!IsPowered || IsMoving || IsDrawerClosed || !IsPlateInserted)
+            {
+                completed?.Invoke();
+                return false;
+            }
+
+            drawerRoutine = StartCoroutine(MoveDrawer(true, completed));
+            return true;
+        }
+
+        public void MarkPlateRemoved()
+        {
+            IsPlateInserted = false;
+        }
+
         public void InsertPlate(Action completed)
         {
             if (!IsPowered || IsPlateInserted || plateTransform == null || instrumentPlateAnchor == null)
@@ -68,6 +114,7 @@ namespace Team5.qPCR
         public void ResetInstrument()
         {
             StopAllCoroutines();
+            drawerRoutine = null;
             IsPowered = false;
             IsPlateInserted = false;
             IsDrawerClosed = true;
@@ -119,6 +166,22 @@ namespace Team5.qPCR
 
             IsPlateInserted = true;
             IsDrawerClosed = true;
+            completed?.Invoke();
+        }
+
+        private IEnumerator MoveDrawer(bool close, Action completed)
+        {
+            var openPosition = drawerClosedPosition + drawerOpenOffset;
+            var from = drawer == null ? Vector3.zero : drawer.localPosition;
+            var to = close ? drawerClosedPosition : openPosition;
+            IsDrawerClosed = false;
+            if (drawer != null)
+            {
+                yield return MoveLocal(drawer, from, to, close ? 0.65f : 0.55f);
+            }
+
+            IsDrawerClosed = close;
+            drawerRoutine = null;
             completed?.Invoke();
         }
 

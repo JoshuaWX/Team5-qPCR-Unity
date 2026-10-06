@@ -11,11 +11,10 @@ Unity `6000.3.25f1` URP project for a realistic, single-room educational qPCR wo
 
 You do not need Unity to play. Keep the EXE beside its `Team5-qPCR_Data` folder; both are required.
 
-- Click the blue on-screen action button to progress. `Space` or `Enter` can also continue when a text field is not selected.
-- Mouse wheel zooms the Guided camera. Right-drag orbits the view.
-- Press `1` for Guided camera, `2` for First person, or `3` for Third person.
-- In First or Third person, press `Tab` to enable walking; use WASD and mouse look. Press `Esc` to release the mouse cursor.
-- Press `R` to reset the whole lesson if needed.
+- Choose **Desktop Preview** or **XR Simulator Preview**, then choose **Guided Training** or **Assessment Mode**.
+- Progress now comes from the laboratory itself: select the labelled equipment, press the machine controls, validate the protocol, grip and seat the plate, press Start, and interpret the controls.
+- Guided Training supplies narration, captions, labels, target pulses, and timed hints. Assessment Mode records mistakes and requested hints.
+- Press `R` or use **Reset Lesson** to restore the complete experience.
 
 ## Open and edit in Unity (developers)
 
@@ -36,9 +35,9 @@ Do not delete `.meta` files, `Packages`, or `ProjectSettings`. Edit the scene, s
 
 ## Android / Quest installation
 
-The included `Team5-qPCR-Redesign.apk` is an **Android/Quest OpenXR build**, intended for a Quest-class headset; it is not a tested touchscreen-phone app. It is simulator-tested, but still needs physical-headset validation and production signing.
+The included `Team5-qPCR.apk` is an **Android/Quest OpenXR build**, intended for a Quest-class headset; it is not a tested touchscreen-phone app. It is simulator-tested, but still needs physical-headset validation and production signing.
 
-1. Copy `C:\TEAM-5\deliverables\Team5-qPCR\Builds\Android\Team5-qPCR-Redesign.apk` to the headset using a trusted sideloading method such as Meta Quest Developer Hub or SideQuest.
+1. Copy `C:\TEAM-5\deliverables\Team5-qPCR\Builds\Android\Team5-qPCR.apk` to the headset using a trusted sideloading method such as Meta Quest Developer Hub or SideQuest.
 2. Enable Developer Mode on the headset, install the APK, then launch it from **Unknown Sources**.
 3. Use the headset controllers; the project includes controller rays and direct plate grabbing.
 
@@ -48,16 +47,13 @@ An ordinary Android phone is not a supported release target yet because the curr
 
 Open `Assets/Team5/Scenes/Team5_qPCR_RealisticLab.unity` and enter Play mode.
 
-- Primary action: click the blue action button. `Space` / `Enter` also work when a UI control is not selected.
-- Secondary choice / align A1: click the secondary button or press `F`.
-- Reset: press `R`.
-- `1` Guided: the camera follows each explanation. Right-drag to orbit; wheel to zoom (12% per notch at default sensitivity).
-- `2` First person / `3` Third person: press `Tab` to walk, use WASD and mouse look. `Esc` releases the cursor.
-- Opening instructions or setup/results stops walking. Text fields and UI scrolling do not operate the camera.
-- `Return to step` restores the guided shot; `Motion: low` uses a brief fade instead of travelling.
-- Back revisits an explanation without undoing the experiment. Use the dash to minimise and `Show instruction` to reopen.
-- `Mix` explains the complete contents of each active reaction.
-- Editor XR simulator mode: press `F8`; press it again to return to desktop mode.
+- Use the visible launcher; F8 is only an optional developer shortcut.
+- Desktop Preview keeps the mouse/keyboard camera and compact desktop UI.
+- XR Simulator Preview activates the XR Origin camera, two controller interaction paths, blue-gloved hands, and the world-space UI.
+- Select the highlighted lab objects in order. Scientific steps have no generic Next button.
+- Use **Replay**, **Mute**, the volume slider, **Help**, and **Show Simulator Controls** when needed.
+- Simulator: `H` manipulates the head, `[` / `]` selects a controller, `T` triggers, `G` grips, `Tab` cycles devices, and `R` resets its pose. Use WASD/QE and right mouse to move/rotate the selected simulated device.
+- In desktop Guided camera mode, right-drag orbits and the wheel zooms about 12% per notch. First- and third-person remain desktop presentation options only; the headset always controls the VR camera.
 
 ## Implemented workflow
 
@@ -69,6 +65,7 @@ The protocol is 20 µL, 105°C lid, SYBR Green, 95°C for 2 minutes, 35 cycles o
 
 - `Assets/Team5/Scripts/Runtime/Data` — scientific configuration, handoff, protocol validation, and generated results.
 - `Assets/Team5/Scripts/Runtime/Controllers` — workflow, plate, instrument, run, UI, roof, and interaction-mode behavior.
+- `Assets/Team5/Scripts/Runtime/Lesson` — Guided/Assessment modes, narration, cues, physical controls, plate socket, recovery, and reporting.
 - `Assets/Team5/Scripts/Runtime/UI` — compact mentor card and progressive curve renderer.
 - `Assets/Editor/ProjectBootstrap` — reproducible scene and player builders.
 - `Assets/Team5/Tests/EditMode` and `PlayMode` — scientific, workflow, reset, scene, and XR simulator checks.
@@ -82,7 +79,7 @@ Run this editor method through Unity:
 unity run C:\TEAM-5\Team5-qPCR-Unity --editor-version 6000.3.25f1 -- -executeMethod Team5.qPCR.Editor.Team5RealisticLabBuilder.Build
 ```
 
-For the existing scene this performs an in-place upgrade, not a destructive regeneration. In the Editor use **Team 5 → Apply blue-white visual upgrade (preserve scene)**. Save your own edits first. The first migration saves a scene backup outside the project. Existing scene GUIDs and scientific bindings are retained. Original PCR resources are never edited.
+For the existing scene this performs an in-place upgrade, not a destructive regeneration. In the Editor use **Team 5 → Apply blue-white visual upgrade (preserve scene)** and then **Team 5 → Apply complete interactive VR upgrade**. Save your own edits first. The interactive builder recreates only the generated `INTERACTIVE_VR_LESSON` subtree; the laboratory and scientific systems remain intact. Backups are saved outside the project. Existing scene GUIDs and scientific bindings are retained. Original PCR resources are never edited.
 
 Editable generated art is in `ArtSource/Team5_Clinical_Assets.blend`; its generator is `ArtSource/build_lab_assets.py`. Exported metre-scale FBX files are in `Assets/Team5/Models/Redesign`. The scientist is an original stylised, rigged learner, not a photorealistic scanned human.
 
@@ -90,7 +87,7 @@ Editable generated art is in `ArtSource/Team5_Clinical_Assets.blend`; its genera
 
 Each active well is a complete 20 µL reaction. There are 26 samples, one positive control and one no-template control; the other 68 wells are unused. The NTC contains water instead of DNA. Team 5 does not mix or seal the handoff plate again.
 
-Read [science notes](Documentation/SCIENCE.md), [asset provenance](Documentation/ASSET_PROVENANCE.md), [testing and builds](Documentation/TESTING.md), and [GitHub updates](Documentation/GITHUB.md).
+Read the [interactive VR recreation guide](Documentation/INTERACTIVE_VR_RECREATION_GUIDE.md), [science notes](Documentation/SCIENCE.md), [asset provenance](Documentation/ASSET_PROVENANCE.md), [testing and builds](Documentation/TESTING.md), and [GitHub updates](Documentation/GITHUB.md).
 
 Android is an OpenXR/Quest build target. **Physical-headset validation pending.** Automated XR rig checks are not a substitute for testing controller reach, comfort and performance on a headset.
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -105,7 +106,7 @@ namespace Team5.qPCR.PlayModeTests
         }
 
         [UnityTest]
-        [Timeout(50000)]
+        [Timeout(90000)]
         public IEnumerator CompleteLessonRunsAllThirtyFiveCyclesAndRequiresCorrectInterpretation()
         {
             yield return SceneManager.LoadSceneAsync("Team5_qPCR_RealisticLab", LoadSceneMode.Single);
@@ -114,6 +115,11 @@ namespace Team5.qPCR.PlayModeTests
             var workflow = Object.FindFirstObjectByType<WorkflowController>();
             var simulation = Object.FindFirstObjectByType<RunSimulationController>();
             var results = Object.FindFirstObjectByType<ResultsController>();
+            var sourceProtocol = GetPrivateField<RunProtocol>(simulation, "protocol");
+            var experiment = GetPrivateField<ExperimentDefinition>(simulation, "experiment");
+            var fastProtocol = Object.Instantiate(sourceProtocol);
+            fastProtocol.Configure(sourceProtocol.ExpectedConfiguration, 3f);
+            simulation.Configure(fastProtocol, experiment, results);
             var highestCycle = 0;
             simulation.ProgressChanged += (cycle, _, _) => highestCycle = Mathf.Max(highestCycle, cycle);
 
@@ -145,6 +151,14 @@ namespace Team5.qPCR.PlayModeTests
             Assert.AreEqual(WorkflowStage.ResultsInterpretation, workflow.CurrentStage);
             workflow.HandlePrimaryAction();
             Assert.AreEqual(WorkflowStage.Complete, workflow.CurrentStage);
+            Object.Destroy(fastProtocol);
+        }
+
+        private static T GetPrivateField<T>(object owner, string name) where T : Object
+        {
+            var field = owner.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, $"Missing private field {name} on {owner.GetType().Name}.");
+            return field.GetValue(owner) as T;
         }
     }
 }

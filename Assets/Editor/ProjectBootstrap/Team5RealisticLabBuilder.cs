@@ -44,6 +44,7 @@ namespace Team5.qPCR.Editor
             if (File.Exists(ScenePath))
             {
                 Team5VisualUpgrade.Apply();
+                Team5InteractiveVrUpgrade.Apply();
                 return;
             }
             EnsureFoldersAndSamples();
@@ -105,6 +106,7 @@ namespace Team5.qPCR.Editor
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Team5VisualUpgrade.Apply();
+            Team5InteractiveVrUpgrade.Apply();
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);

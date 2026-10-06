@@ -23,6 +23,26 @@ namespace Team5.qPCR.Editor
         private const string TemporaryDesktopPackageSettingsPath = "Assets/Editor/Team5BuildSupport/EmptyDesktopOpenXRPackageSettings.asset";
         private const string OpenXrPackageSettingsPath = "Assets/XR/Settings/OpenXR Package Settings.asset";
 
+        public static void ScheduleWindowsBuild()
+        {
+            Debug.Log("[Team 5 Build] Windows build queued.");
+            EditorApplication.delayCall += () =>
+            {
+                try { BuildWindows(); }
+                catch (Exception exception) { Debug.LogException(exception); }
+            };
+        }
+
+        public static void ScheduleAndroidBuild()
+        {
+            Debug.Log("[Team 5 Build] Android Quest-ready build queued.");
+            EditorApplication.delayCall += () =>
+            {
+                try { BuildAndroid(); }
+                catch (Exception exception) { Debug.LogException(exception); }
+            };
+        }
+
         public static void BuildWindows()
         {
             var output = GetCommandLineValue("-buildOutput") ??

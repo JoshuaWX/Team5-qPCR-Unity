@@ -12,10 +12,10 @@ With the Editor closed and Unity CLI installed:
 unity test . --mode EditMode --filter Team5 --output TestResults/editmode.xml
 unity test . --mode PlayMode --filter Team5 --output TestResults/playmode.xml
 unity build . --target StandaloneWindows64 --execute-method Team5.qPCR.Editor.Team5Build.BuildWindows --output-path ../deliverables/Team5-qPCR/Builds/Windows/Team5-qPCR.exe --allow-dirty-build
-unity build . --target Android --execute-method Team5.qPCR.Editor.Team5Build.BuildAndroid --output-path ../deliverables/Team5-qPCR/Builds/Android/Team5-qPCR-Redesign.apk --allow-dirty-build
+unity build . --target Android --execute-method Team5.qPCR.Editor.Team5Build.BuildAndroid --output-path ../deliverables/Team5-qPCR/Builds/Android/Team5-qPCR.apk --allow-dirty-build
 ```
 
-The build helpers constrain cleanup to the delivery Builds folder. Back up an older build before replacing it. Android requires Unity's Android Build Support, SDK/NDK and OpenJDK modules. The final verified run produced **27/27 EditMode** and **15/15 PlayMode** passes. The APK is an OpenXR/Quest target; physical-headset validation is pending. No store upload or device installation is performed automatically.
+The build helpers constrain cleanup to the delivery Builds folder. Back up an older build before replacing it. Android requires Unity's Android Build Support, SDK/NDK and OpenJDK modules. The final verified interactive run produced **30/30 EditMode** and **19/19 PlayMode** passes. The PlayMode suite includes the two lesson modes, narration architecture, physical controls, four inspection targets, both simulated controllers, XR Origin camera exclusivity, A1-sensitive loading, reset and all 35 cycles. The APK is an OpenXR/Quest target; physical-headset validation is pending. No store upload or device installation is performed automatically.
 
 ## Built Windows walkthrough
 
@@ -27,4 +27,4 @@ The opt-in smoke runner operates the normal workflow, checks errors and saves ei
 
 Repeat with 1280 × 720 and a different output folder. The final 1920 × 1080 and 1280 × 720 walkthroughs both passed with zero runtime errors. The smoke runner exits when complete. Its mean frame time includes screenshot work and is not a representative GPU benchmark.
 
-For XR in the Editor press F8. Use the imported XR Interaction Simulator's on-screen bindings to move the simulated headset and each controller. Confirm both controller rays operate the same UI actions, direct grabbing reaches the plate, and the headset is never moved by Guided camera transitions. Re-test reach and comfort on a physical Quest. Optical hand tracking is not implemented.
+For XR, enter Play mode and select **XR Simulator Preview** from the visible launcher. F8 remains an optional developer shortcut only. Use the in-app simulator guide to move the simulated headset and each controller. Confirm both controller rays operate the same UI actions, direct grabbing reaches the plate, incorrect A1 rotation is rejected, and the headset is never moved by desktop Guided camera transitions. Re-test reach, comfort, controller offsets, text size and performance on a physical Quest. Optical hand tracking is not implemented.

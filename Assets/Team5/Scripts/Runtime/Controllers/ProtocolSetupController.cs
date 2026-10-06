@@ -21,6 +21,7 @@ namespace Team5.qPCR
 
         public RunConfiguration CurrentConfiguration { get; private set; } = new RunConfiguration();
         public bool IsValid { get; private set; }
+        public int FirstInvalidFieldIndex { get; private set; } = -1;
 
         public void Configure(
             RunProtocol protocol,
@@ -60,9 +61,12 @@ namespace Team5.qPCR
 
         public bool ValidateAndReport()
         {
+            ResetFieldHighlights();
             if (!TryReadConfiguration(out var configuration, out var parsingError))
             {
                 IsValid = false;
+                FirstInvalidFieldIndex = FindFirstUnparseableField();
+                HighlightField(FirstInvalidFieldIndex);
                 SetFeedback(parsingError, false);
                 return false;
             }
@@ -72,10 +76,13 @@ namespace Team5.qPCR
             IsValid = issues.Count == 0;
             if (IsValid)
             {
+                FirstInvalidFieldIndex = -1;
                 SetFeedback("Protocol valid — all temperatures, times, cycles, and fluorescence settings are ready.", true);
                 return true;
             }
 
+            FirstInvalidFieldIndex = FieldForIssue(issues[0].Code);
+            HighlightField(FirstInvalidFieldIndex);
             SetFeedback(issues[0].Message, false);
             return false;
         }
@@ -86,7 +93,9 @@ namespace Team5.qPCR
                 ? new RunConfiguration()
                 : expectedProtocol.ExpectedConfiguration;
             IsValid = false;
+            FirstInvalidFieldIndex = -1;
             WriteConfiguration(CurrentConfiguration);
+            ResetFieldHighlights();
             SetFeedback("Check each value, then validate the protocol.", true);
         }
 
@@ -196,6 +205,66 @@ namespace Team5.qPCR
                 secondaryValidationText.text = message;
                 secondaryValidationText.color = validationText.color;
             }
+        }
+
+        private TMP_InputField[] ActiveFields => secondaryPanel != null && secondaryPanel.activeInHierarchy ? secondaryFields : fields;
+
+        private void ResetFieldHighlights()
+        {
+            ResetHighlights(fields);
+            ResetHighlights(secondaryFields);
+            if (fluorophoreDropdown?.targetGraphic != null) fluorophoreDropdown.targetGraphic.color = Color.white;
+            if (secondaryFluorophoreDropdown?.targetGraphic != null) secondaryFluorophoreDropdown.targetGraphic.color = Color.white;
+        }
+
+        private static void ResetHighlights(TMP_InputField[] inputFields)
+        {
+            if (inputFields == null) return;
+            foreach (var field in inputFields)
+                if (field?.targetGraphic != null) field.targetGraphic.color = Color.white;
+        }
+
+        private void HighlightField(int index)
+        {
+            var error = new Color(1f, 0.78f, 0.80f, 1f);
+            if (index == 14)
+            {
+                var dropdown = secondaryPanel != null && secondaryPanel.activeInHierarchy
+                    ? secondaryFluorophoreDropdown : fluorophoreDropdown;
+                if (dropdown?.targetGraphic != null) dropdown.targetGraphic.color = error;
+                return;
+            }
+            var active = ActiveFields;
+            if (active != null && index >= 0 && index < active.Length && active[index]?.targetGraphic != null)
+                active[index].targetGraphic.color = error;
+        }
+
+        private int FindFirstUnparseableField()
+        {
+            var active = ActiveFields;
+            if (active == null) return -1;
+            for (var index = 0; index < active.Length && index < FieldCount; index++)
+                if (active[index] == null || !float.TryParse(active[index].text, NumberStyles.Float,
+                        CultureInfo.InvariantCulture, out _)) return index;
+            return -1;
+        }
+
+        private static int FieldForIssue(ValidationIssueCode code)
+        {
+            return code switch
+            {
+                ValidationIssueCode.ReactionVolume => 0,
+                ValidationIssueCode.LidTemperature => 1,
+                ValidationIssueCode.Fluorophore => 14,
+                ValidationIssueCode.InitialHold => 2,
+                ValidationIssueCode.CycleCount => 4,
+                ValidationIssueCode.Denaturation => 5,
+                ValidationIssueCode.Annealing => 7,
+                ValidationIssueCode.Extension => 9,
+                ValidationIssueCode.Acquisition => 11,
+                ValidationIssueCode.MeltCurve => 12,
+                _ => -1
+            };
         }
     }
 }

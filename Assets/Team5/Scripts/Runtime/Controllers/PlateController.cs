@@ -71,6 +71,17 @@ namespace Team5.qPCR
             return true;
         }
 
+        public bool InspectPreparedPlate()
+        {
+            if (!IsPrepared)
+            {
+                return false;
+            }
+
+            IsInspected = true;
+            return true;
+        }
+
         public void AlignA1()
         {
             IsA1Aligned = true;

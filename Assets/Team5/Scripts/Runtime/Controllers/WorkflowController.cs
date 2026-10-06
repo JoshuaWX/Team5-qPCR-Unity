@@ -66,6 +66,113 @@ namespace Team5.qPCR
             ResetExperience();
         }
 
+        public bool BeginLesson()
+        {
+            if (IsBusy || CurrentStage != WorkflowStage.Introduction) return false;
+            Advance();
+            return true;
+        }
+
+        public bool AcceptPreparedHandoff()
+        {
+            if (IsBusy || CurrentStage != WorkflowStage.HandoffReview || plateController == null || !plateController.IsPrepared)
+            {
+                StatusChanged?.Invoke("Handoff blocked: the prepared plate record is incomplete.");
+                return false;
+            }
+
+            StatusChanged?.Invoke("Team 4 handoff accepted: 96 wells mapped, 28 active reactions, sealed and bubble-free.");
+            Advance();
+            return true;
+        }
+
+        public bool PowerOnInstrument()
+        {
+            if (IsBusy || CurrentStage != WorkflowStage.PowerOn || instrumentController == null) return false;
+            instrumentController.PowerOn();
+            StatusChanged?.Invoke("Instrument ready. The protocol touchscreen is unlocked.");
+            Advance();
+            return true;
+        }
+
+        public bool ValidateProtocol()
+        {
+            if (IsBusy || CurrentStage != WorkflowStage.ProtocolSetup) return false;
+            if (protocolSetup != null && protocolSetup.ValidateAndReport())
+            {
+                StatusChanged?.Invoke("Protocol accepted. Plate inspection is now unlocked.");
+                Advance();
+                return true;
+            }
+
+            StatusChanged?.Invoke("Protocol blocked. Correct the highlighted setting on the touchscreen.");
+            return false;
+        }
+
+        public bool CompletePreparedPlateInspection()
+        {
+            if (IsBusy || CurrentStage != WorkflowStage.PlateInspection || plateController == null || !plateController.InspectPreparedPlate())
+                return false;
+            StatusChanged?.Invoke("Plate ID, optical seal, bubbles and the A1 marker all pass inspection.");
+            Advance();
+            return true;
+        }
+
+        public bool ConfirmPhysicalLoadingComplete()
+        {
+            if (IsBusy || CurrentStage != WorkflowStage.InstrumentLoading || instrumentController == null ||
+                !instrumentController.IsPlateInserted || !instrumentController.IsDrawerClosed)
+            {
+                StatusChanged?.Invoke("Loading is incomplete. Seat the plate correctly, then close the drawer.");
+                return false;
+            }
+
+            StatusChanged?.Invoke("Plate inserted with full thermal contact; drawer closed.");
+            Advance();
+            return true;
+        }
+
+        public bool StartValidatedRun()
+        {
+            if (IsBusy || CurrentStage != WorkflowStage.RunValidation) return false;
+            if (!RunEligibility.CanStart(
+                    plateController != null && plateController.IsPrepared,
+                    plateController != null && plateController.IsInspected,
+                    instrumentController != null && instrumentController.IsPlateInserted,
+                    instrumentController != null && instrumentController.IsDrawerClosed,
+                    protocolSetup == null || protocolSetup.IsValid))
+            {
+                StatusChanged?.Invoke("Run blocked: protocol, plate inspection, insertion and drawer checks must all pass.");
+                return false;
+            }
+
+            Advance();
+            IsBusy = true;
+            StatusChanged?.Invoke("35-cycle qPCR run started. Educational time is compressed to 30 seconds.");
+            runSimulation?.StartRun();
+            return true;
+        }
+
+        public bool InterpretControls(bool controlsPass)
+        {
+            if (IsBusy || CurrentStage != WorkflowStage.ResultsInterpretation) return false;
+            if (!controlsPass)
+            {
+                StatusChanged?.Invoke("Try again: the positive control amplified and the NTC stayed flat.");
+                return false;
+            }
+
+            if (resultsController == null || !resultsController.ControlsValid)
+            {
+                StatusChanged?.Invoke("Controls do not pass. Do not accept this run; reset and investigate.");
+                return false;
+            }
+
+            StatusChanged?.Invoke("Correct: the positive control rises and the NTC stays flat. This run is valid.");
+            Advance();
+            return true;
+        }
+
         public void HandlePrimaryAction()
         {
             if (IsBusy)
@@ -76,34 +183,16 @@ namespace Team5.qPCR
             switch (CurrentStage)
             {
                 case WorkflowStage.Introduction:
-                    Advance();
+                    BeginLesson();
                     break;
                 case WorkflowStage.HandoffReview:
-                    if (plateController != null && plateController.IsPrepared)
-                    {
-                        StatusChanged?.Invoke("Team 4 handoff accepted: 96 wells mapped, 28 active reactions, sealed and bubble-free.");
-                        Advance();
-                    }
-                    else
-                    {
-                        StatusChanged?.Invoke("Handoff blocked: the prepared plate record is incomplete.");
-                    }
+                    AcceptPreparedHandoff();
                     break;
                 case WorkflowStage.PowerOn:
-                    instrumentController?.PowerOn();
-                    StatusChanged?.Invoke("Instrument ready. The protocol touchscreen is unlocked.");
-                    Advance();
+                    PowerOnInstrument();
                     break;
                 case WorkflowStage.ProtocolSetup:
-                    if (protocolSetup != null && protocolSetup.ValidateAndReport())
-                    {
-                        StatusChanged?.Invoke("Protocol accepted. Chapter 2 is now unlocked.");
-                        Advance();
-                    }
-                    else
-                    {
-                        StatusChanged?.Invoke("Protocol blocked. Correct the highlighted setting on the touchscreen.");
-                    }
+                    ValidateProtocol();
                     break;
                 case WorkflowStage.PlateInspection:
                     if (plateController == null || !plateController.IsA1Aligned)
@@ -145,27 +234,10 @@ namespace Team5.qPCR
                     RefreshCurrentStage();
                     break;
                 case WorkflowStage.RunValidation:
-                    if (!RunEligibility.CanStart(
-                            plateController != null && plateController.IsPrepared,
-                            plateController != null && plateController.IsInspected,
-                            instrumentController != null && instrumentController.IsPlateInserted,
-                            instrumentController != null && instrumentController.IsDrawerClosed,
-                            protocolSetup == null || protocolSetup.IsValid))
-                    {
-                        StatusChanged?.Invoke("Run blocked: protocol, plate inspection, insertion, and drawer checks must all pass.");
-                        return;
-                    }
-
-                    Advance();
-                    IsBusy = true;
-                    StatusChanged?.Invoke("35-cycle qPCR run started. Educational time is compressed to 30 seconds.");
-                    runSimulation?.StartRun();
+                    StartValidatedRun();
                     break;
                 case WorkflowStage.ResultsInterpretation:
-                    if(resultsController==null || !resultsController.ControlsValid)
-                    { StatusChanged?.Invoke("Controls do not pass. Do not accept this run; reset and investigate."); return; }
-                    StatusChanged?.Invoke("Correct: the positive control rises and the NTC stays flat. This run is valid.");
-                    Advance();
+                    InterpretControls(true);
                     break;
                 case WorkflowStage.Complete:
                     ResetExperience();
