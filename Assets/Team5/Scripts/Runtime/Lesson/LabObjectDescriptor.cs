@@ -32,6 +32,7 @@ namespace Team5.qPCR
 
         private bool isCurrent;
         private GuidanceVisualState visualState;
+        private Collider lessonProxyCollider;
 
         public string DisplayName => displayName;
         public string Description => description;
@@ -67,6 +68,8 @@ namespace Team5.qPCR
 
         private void OnEnable()
         {
+            if (name.StartsWith("Tour_") || name.StartsWith("Inspect_") || name == "Seat_Plate_Guidance_Target")
+                lessonProxyCollider = GetComponent<Collider>();
             if (interactable == null) interactable = GetComponent<XRSimpleInteractable>();
             if (interactable == null) return;
             interactable.selectEntered.AddListener(OnSelected);
@@ -84,6 +87,10 @@ namespace Team5.qPCR
 
         private void LateUpdate()
         {
+            // Small plate checkpoints overlap. Only the current checkpoint should intercept
+            // rays; otherwise a future seal/bubble target hides the prepared plate beneath it.
+            if (lessonProxyCollider != null)
+                lessonProxyCollider.enabled = activatesLessonAction && lesson != null && lesson.IsActive && lesson.CurrentAction == action;
             if (labelRoot == null || !labelRoot.gameObject.activeSelf) return;
             var camera = Camera.main;
             if (camera == null) return;
@@ -143,6 +150,14 @@ namespace Team5.qPCR
         {
             isCurrent = false;
             SetVisualState(GuidanceVisualState.Complete);
+            ShowLabel(false);
+        }
+
+        public void ResetFeedback()
+        {
+            CancelInvoke(nameof(RestoreAfterError));
+            isCurrent = false;
+            SetVisualState(GuidanceVisualState.Idle);
             ShowLabel(false);
         }
 

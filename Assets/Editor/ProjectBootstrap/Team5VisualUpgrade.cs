@@ -107,20 +107,65 @@ namespace Team5.qPCR.Editor
                 if (child.name == "Motorized_Plate_Drawer" || child.name == "Power_Status_LED" || child.name == "ClinicalInstrumentMesh") continue;
                 child.gameObject.SetActive(false);
             }
-            Model(instrument, "ClinicalInstrumentMesh", "Clinical_Instrument", Vector3.zero);
+            var instrumentMesh = Model(instrument, "ClinicalInstrumentMesh", "Clinical_Instrument", Vector3.zero);
+            if (IsArtistModel(instrumentMesh, "Q-PCR.fbx"))
+            {
+                // Q-PCR.fbx was authored ten times larger than real-world Unity units. At 0.1,
+                // its body is approximately 404 x 400 x 581 mm. Re-centre the body and place its
+                // base on the bench while preserving the functional controller on the parent.
+                instrumentMesh.localScale = Vector3.one * .1f;
+                instrumentMesh.localRotation = Quaternion.identity;
+                instrumentMesh.localPosition = new Vector3(-.03408f, -.03097f, 0f);
+
+                // The FBX includes a beautiful open drawer and 96-well block for presentation,
+                // but the lesson needs the separate animated drawer, socket and prepared plate.
+                // Hide the static duplicates and retain the machine housing/screen (Cube).
+                foreach (var duplicate in new[] { "Gasket_Frame", "Plane.002", "Thermal_Block", "Wells_96" })
+                    SetArtistPartVisible(instrumentMesh, duplicate, false);
+                SetArtistPartVisible(instrumentMesh, "Plane", true);
+                SetArtistPartVisible(instrumentMesh, "Plane.001", true);
+            }
             var housingCollider = Ensure<BoxCollider>(instrument.gameObject);
-            housingCollider.center = new Vector3(0,.235f,0); housingCollider.size = new Vector3(.45f,.47f,.48f);
+            housingCollider.center = new Vector3(0,.20f,0); housingCollider.size = new Vector3(.404f,.40f,.581f);
+            instrument.gameObject.layer = 2; // Physical obstacle, not a ray target; child buttons stay on Default.
             var drawer = Find("Motorized_Plate_Drawer", instrument);
             drawer.gameObject.SetActive(true); drawer.localScale = Vector3.one; drawer.localPosition = new Vector3(0,.105f,-.205f);
             drawer.GetComponent<Renderer>().enabled = false;
-            drawer.GetComponent<BoxCollider>().size = new Vector3(.174f,.04f,.15f);
+            drawer.GetComponent<BoxCollider>().size = new Vector3(.21f,.048f,.14f);
+            drawer.gameObject.layer = 2;
             Find("Drawer_Thermal_Block", drawer).gameObject.SetActive(false);
-            Model(drawer, "ClinicalDrawerMesh", "Clinical_Drawer", Vector3.zero);
+            var drawerMesh = Model(drawer, "ClinicalDrawerMesh", "Clinical_Drawer", Vector3.zero);
+            if (IsArtistModel(drawerMesh, "Lab Drawer.fbx"))
+            {
+                drawerMesh.localRotation = Quaternion.Euler(0,270,0);
+                drawerMesh.localPosition = new Vector3(0f, 0f, .0179f);
+                drawer.GetComponent<BoxCollider>().size = new Vector3(.14f,.048f,.21f);
+            }
             var anchor = Find("A1_ALIGNED_PLATE_ANCHOR", drawer); anchor.localPosition = new Vector3(0,.014f,0); anchor.localScale = Vector3.one;
+            if (IsArtistModel(instrumentMesh, "Q-PCR.fbx"))
+            {
+                // Reuse the qPCR artist's own moving tray, gasket, block and wells. Lab Drawer.fbx
+                // is furniture, not the instrument's tray. The source was modelled open.
+                drawerMesh.gameObject.SetActive(false);
+                var assembly = FindOrCreate("Artist_Moving_Drawer_Assembly", drawer);
+                foreach (Transform child in assembly.Cast<Transform>().ToArray()) Object.DestroyImmediate(child.gameObject);
+                assembly.localPosition = new Vector3(-.03408f, -.13597f, .425f);
+                assembly.localRotation = Quaternion.identity;
+                assembly.localScale = Vector3.one * .1f;
+                foreach (var partName in new[] { "Plane.002", "Gasket_Frame", "Thermal_Block", "Wells_96" })
+                {
+                    var original = instrumentMesh.Find(partName);
+                    var part = Object.Instantiate(original.gameObject, assembly, false);
+                    part.name = partName;
+                    part.SetActive(true);
+                }
+                anchor.localPosition = new Vector3(-.0009f,-.0079f,.08f);
+                drawer.GetComponent<BoxCollider>().size = new Vector3(.404f,.183f,.415f);
+            }
             var indicator = Find("Power_Status_LED", instrument);
             indicator.localPosition = new Vector3(.174f,.30f,-.247f); indicator.localScale = Vector3.one * .009f;
             var instrumentSerialized = new SerializedObject(instrument.GetComponent<InstrumentController>());
-            instrumentSerialized.FindProperty("drawerOpenOffset").vector3Value = new Vector3(0,0,-.17f);
+            instrumentSerialized.FindProperty("drawerOpenOffset").vector3Value = new Vector3(0,0,-.22f);
             instrumentSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             SetTransform("Computer_Monitor", new Vector3(3.60f,1.30f,3.57f), new Vector3(.53f,.33f,.026f));
@@ -137,9 +182,19 @@ namespace Team5.qPCR.Editor
                 foreach (var item in sourceChildren) item.gameObject.SetActive(false);
                 if (rackName.StartsWith("Tube_Rack"))
                 { rack.localScale = new Vector3(.14f,.025f,.11f); rack.position = new Vector3(-5.2f, .992f, rackName.EndsWith("1") ? .4f : -.1f); }
+                var rackVisual = FindOrCreate(rackName + "_ArtistVisual", rack.parent);
+                rackVisual.position = rack.position;
+                rackVisual.rotation = Quaternion.identity;
+                rackVisual.localScale = Vector3.one;
+                Model(rackVisual, "ArtistRackMesh", "Artist_Microtube_Rack", Vector3.zero);
+                var rackRenderer = rack.GetComponent<Renderer>();
+                if (rackRenderer != null) rackRenderer.enabled = false;
+
                 var rackTop = new Vector3(rack.position.x, .998f, rack.position.z);
                 var container = FindOrCreate(rackName + "_RealScale_Tubes", rack.parent); container.position = rackTop;
-                for (var i = 0; i < 12; i++) Model(container, "Tube_" + i, "Clinical_Microtube", new Vector3(-.045f + i % 4 * .03f, .012f, -.027f + i / 4 * .027f));
+                foreach (Transform existing in container.Cast<Transform>().ToArray()) Object.DestroyImmediate(existing.gameObject);
+                Model(container, "TubeCluster_Left", "Artist_Microtube_Cluster", new Vector3(-.045f, .018f, 0f));
+                Model(container, "TubeCluster_Right", "Artist_Microtube_Cluster", new Vector3(.045f, .018f, 0f));
             }
             var stand = Find("Pipette_Stand");
             foreach (var existing in stand.Cast<Transform>().ToArray()) existing.gameObject.SetActive(false);
@@ -188,7 +243,12 @@ namespace Team5.qPCR.Editor
         private static void UpgradeFurniture()
         {
             var furniture = Find("LAB_FURNITURE_AND_STORAGE");
-            foreach (var original in furniture.Cast<Transform>().ToArray())
+            // Work only from the original blockout children. Existing Refined_* visuals may be
+            // replaced by Model(); iterating those destroyed references would stop the upgrade
+            // before the sink, coats, centrifuge and scientist are processed.
+            foreach (var original in furniture.Cast<Transform>()
+                         .Where(item => item != null && !item.name.StartsWith("Refined_"))
+                         .ToArray())
             {
                 var side = original.name.StartsWith("Side_Cabinet_");
                 if (side || original.name.StartsWith("Base_Cabinet_"))
@@ -196,13 +256,31 @@ namespace Team5.qPCR.Editor
                     original.GetComponent<Renderer>().enabled = false;
                     var mesh = Model(furniture, "Refined_"+original.name, "Clinical_Cabinet",
                         new Vector3(original.position.x,0,original.position.z));
-                    if(side){mesh.localRotation=Quaternion.Euler(0,-90,0)*mesh.localRotation;mesh.localScale=Vector3.Scale(mesh.localScale,new Vector3(.96f,1,.91f));}
+                    if (IsArtistModel(mesh, "Cabinet.fbx"))
+                    {
+                        // The team cabinet is 1.04 m wide and 0.85 m tall. Compress only its
+                        // unusually deep 0.95 m axis to a realistic 0.60 m laboratory cabinet.
+                        mesh.localScale = new Vector3(1f, 1f, .63f);
+                        if (side)
+                        {
+                            mesh.localRotation = Quaternion.Euler(0, 90, 0);
+                            mesh.localPosition += new Vector3(-.00775f, .1717f, .8923f);
+                        }
+                        else
+                        {
+                            mesh.localRotation = Quaternion.Euler(0, 180, 0);
+                            mesh.localPosition += new Vector3(.8923f, .1717f, .00775f);
+                        }
+                    }
+                    else if(side){mesh.localRotation=Quaternion.Euler(0,-90,0)*mesh.localRotation;mesh.localScale=Vector3.Scale(mesh.localScale,new Vector3(.96f,1,.91f));}
                 }
                 if (original.name.StartsWith("Cabinet_Handle_") || original.name.StartsWith("Side_Drawer_Handle_")) original.gameObject.SetActive(false);
             }
             var sink=Find("Handwashing_Sink");
-            sink.gameObject.SetActive(false);
-            Model(furniture,"Refined_HandwashingSink","Clinical_Sink",new Vector3(-4.35f,.985f,3.5f));
+            // Keep the simple hidden blockout active as a dependable collision surface.
+            sink.gameObject.SetActive(true);
+            foreach (var renderer in sink.GetComponentsInChildren<Renderer>(true)) renderer.enabled = false;
+            Model(furniture,"Refined_HandwashingSink","Clinical_Sink",new Vector3(-4.35f,1.10f,3.465f));
             var coats=Find("PPE_AND_LAB_COAT_AREA");
             for(var i=0;i<3;i++)
             {
@@ -212,7 +290,9 @@ namespace Team5.qPCR.Editor
             var centrifuge=Find("Plate_Centrifuge");
             centrifuge.GetComponent<Renderer>().enabled=false;
             foreach(Transform child in centrifuge)child.gameObject.SetActive(false);
-            Model(centrifuge.parent,"Refined_Centrifuge","Clinical_Centrifuge",new Vector3(-2.9f,.985f,3.52f));
+            var centrifugeMesh = Model(centrifuge.parent,"Refined_Centrifuge","Clinical_Centrifuge",new Vector3(-2.9f,.985f,3.52f));
+            if (IsArtistModel(centrifugeMesh, "Compact_plate_centrifuge.fbx"))
+                centrifugeMesh.localPosition += new Vector3(0f, -.7737f, .0325f);
         }
 
         private static void UpgradeNavigationAndUI()
@@ -237,6 +317,7 @@ namespace Team5.qPCR.Editor
             if (simulator != null)
                 Ensure<XRInteractionSimulatorInputBridge>(simulator.gameObject).Configure(simulator);
             var director = Ensure<LabCameraDirector>(camera.gameObject);
+            director.enabled = true;
             director.SetDialogueSequence(AssetDatabase.LoadAssetAtPath<DialogueSequence>(Root+"Data/Team5_DialogueSequence.asset"));
             var player = FindOrCreate("LEARNER_SCIENTIST", null); player.position = new Vector3(2.8f,.05f,1.9f); player.rotation = Quaternion.identity;
             var controller = Ensure<CharacterController>(player.gameObject);
@@ -372,11 +453,20 @@ namespace Team5.qPCR.Editor
 
         private static Animation SetupAnimation(Transform avatar)
         {
-            var path=Root+"Models/Redesign/Laboratory_Scientist.fbx";
+            var path=PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(avatar.gameObject);
             var importer=(ModelImporter)AssetImporter.GetAtPath(path);
-            if(importer.animationType!=ModelImporterAnimationType.Legacy){importer.animationType=ModelImporterAnimationType.Legacy;importer.SaveAndReimport();}
             var animation=Ensure<Animation>(avatar.gameObject);
-            foreach(var clip in AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().Where(c=>!c.name.StartsWith("__preview__")))
+            var clips = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().Where(c=>!c.name.StartsWith("__preview__")).ToArray();
+            if (clips.Length == 0)
+            {
+                // The team scientist is correctly life-sized but currently has no armature or
+                // animation clips. It still follows the working third-person CharacterController.
+                animation.playAutomatically = false;
+                animation.clip = null;
+                return animation;
+            }
+            if(importer.animationType!=ModelImporterAnimationType.Legacy){importer.animationType=ModelImporterAnimationType.Legacy;importer.SaveAndReimport();}
+            foreach(var clip in clips)
             {
                 foreach(var name in new[]{"Idle","Walk","Reach"})if(clip.name.Contains(name)){animation.AddClip(clip,name);animation[name].wrapMode=WrapMode.Loop;}
             }
@@ -386,9 +476,19 @@ namespace Team5.qPCR.Editor
 
         private static Transform Model(Transform parent,string name,string filename,Vector3 position)
         {
-            var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(Root+"Models/Redesign/"+filename+".fbx");
+            var sourcePath = ResolveModelPath(filename);
+            var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(sourcePath);
             if(prefab==null)throw new InvalidOperationException("Missing Blender export: "+filename);
             var existing=parent.Find(name);
+            if (existing != null)
+            {
+                var existingSource = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(existing.gameObject);
+                if (!string.Equals(existingSource, sourcePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    Object.DestroyImmediate(existing.gameObject);
+                    existing = null;
+                }
+            }
             GameObject model;
             if(existing!=null)model=existing.gameObject;
             else
@@ -399,24 +499,87 @@ namespace Team5.qPCR.Editor
             // FBX contains Blender's axis conversion and centimetre scale. Preserve those,
             // then orient equipment fronts toward the room (the learner faces forward).
             model.transform.localScale=prefab.transform.localScale;
-            model.transform.localRotation=Quaternion.Euler(0,filename=="Laboratory_Scientist"?0:180,0)*prefab.transform.localRotation;
+            model.transform.localRotation=Quaternion.Euler(0,filename=="Laboratory_Scientist"||filename=="Clinical_Instrument"?0:180,0)*prefab.transform.localRotation;
+            if (filename == "Artist_Microtube_Rack") model.transform.localPosition += new Vector3(-.0642f, .0105f, -.0411f);
+            if (filename == "Artist_Microtube_Cluster")
+            {
+                // The supplied file is an exploded arrangement. Place each body and matching cap
+                // into a rack slot without altering the artist's source FBX.
+                for (var index = 0; index < 3; index++)
+                {
+                    var suffix = index == 0 ? "" : ".00" + index;
+                    var body = model.transform.Find("Tube body" + suffix);
+                    var cap = model.transform.Find("Tube cover" + suffix);
+                    if (body == null || cap == null) continue;
+                    var original = prefab.transform.Find(body.name);
+                    var originalCap = prefab.transform.Find(cap.name);
+                    body.localPosition = original.localPosition;
+                    cap.localPosition = originalCap.localPosition;
+                    var center = model.transform.InverseTransformPoint(body.GetComponent<Renderer>().bounds.center);
+                    var delta = new Vector3((index - 1) * .024f, .0175f, 0f) - center;
+                    body.localPosition += delta;
+                    cap.localPosition += delta;
+                }
+            }
+            var modelStem = SafeAssetName(Path.GetFileNameWithoutExtension(sourcePath));
             foreach(var renderer in model.GetComponentsInChildren<Renderer>(true))
             {
-                renderer.sharedMaterials=renderer.sharedMaterials.Select(source=>
+                var originalRenderer = prefab.transform.Find(AnimationUtility.CalculateTransformPath(renderer.transform, model.transform))?.GetComponent<Renderer>();
+                var sourceMaterials = originalRenderer != null ? originalRenderer.sharedMaterials : renderer.sharedMaterials;
+                renderer.sharedMaterials=sourceMaterials.Select(source=>
                 {
-                    var path=Root+"Materials/RealisticLab/Redesign_"+source.name.Replace("Redesign_","")+".mat";
+                    var path=Root+"Materials/RealisticLab/Artist_"+modelStem+"_"+SafeAssetName(source.name)+".mat";
                     var mat=AssetDatabase.LoadAssetAtPath<Material>(path);
                     if(mat==null)
                     {
-                        mat=new Material(Shader.Find("Universal Render Pipeline/Lit"));mat.name="Redesign_"+source.name;
+                        mat=new Material(Shader.Find("Universal Render Pipeline/Lit"));mat.name="Artist_"+modelStem+"_"+source.name;
                         var color=source.HasProperty("_BaseColor")?source.GetColor("_BaseColor"):source.color;
                         mat.SetColor("_BaseColor",color);mat.SetFloat("_Smoothness",source.name.Contains("Cotton")?.2f:.42f);
-                        mat.SetFloat("_Metallic",source.name.Contains("Stainless")?.85f:0);AssetDatabase.CreateAsset(mat,path);
+                        var metal = source.name.Contains("Stainless") || source.name.Contains("Aluminium") || sourcePath.EndsWith("Stainless_washbasin.fbx",StringComparison.OrdinalIgnoreCase);
+                        mat.SetFloat("_Metallic",metal ? .85f : 0);AssetDatabase.CreateAsset(mat,path);
                     }
                     return mat;
                 }).ToArray();
             }
             return model.transform;
+        }
+
+        private static string ResolveModelPath(string filename)
+        {
+            var artistPath = filename switch
+            {
+                "Clinical_Instrument" => Root + "Models/Our-design/Q-PCR.fbx",
+                "Clinical_Drawer" => Root + "Models/Our-design/Lab Drawer.fbx",
+                "Artist_Microtube_Rack" => Root + "Models/Our-design/Microtube_Rack.fbx",
+                "Artist_Microtube_Cluster" => Root + "Models/Our-design/Microtube.fbx",
+                "Clinical_Cabinet" => Root + "Models/Our-design/Cabinet.fbx",
+                "Clinical_Centrifuge" => Root + "Models/Our-design/Compact_plate_centrifuge.fbx",
+                "Clinical_HangingCoat" => Root + "Models/Our-design/HangingCoat.fbx",
+                "Clinical_Sink" => Root + "Models/Our-design/Stainless_washbasin.fbx",
+                "Laboratory_Scientist" => Root + "Models/Our-design/Laboratory_Scientist.fbx",
+                _ => string.Empty
+            };
+            if (!string.IsNullOrEmpty(artistPath) && AssetDatabase.LoadAssetAtPath<GameObject>(artistPath) != null)
+                return artistPath;
+            return Root + "Models/Redesign/" + filename + ".fbx";
+        }
+
+        private static bool IsArtistModel(Transform instance, string fileName)
+        {
+            if (instance == null) return false;
+            var source = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(instance.gameObject);
+            return source.EndsWith("/Our-design/" + fileName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void SetArtistPartVisible(Transform root, string partName, bool visible)
+        {
+            var part = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(item => item.name == partName);
+            if (part != null) part.gameObject.SetActive(visible);
+        }
+
+        private static string SafeAssetName(string value)
+        {
+            return new string(value.Select(character => char.IsLetterOrDigit(character) ? character : '_').ToArray());
         }
 
         private static TMP_FontAsset EnsureFont(string name)

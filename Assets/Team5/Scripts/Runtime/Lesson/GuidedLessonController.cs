@@ -18,7 +18,9 @@ namespace Team5.qPCR
         [SerializeField] private LessonStepDefinition[] steps = Array.Empty<LessonStepDefinition>();
         [SerializeField] private TMP_Text[] modeLabels = Array.Empty<TMP_Text>();
         [SerializeField] private TMP_Text[] stepLabels = Array.Empty<TMP_Text>();
+        [SerializeField] private TMP_Text[] targetLabels = Array.Empty<TMP_Text>();
         [SerializeField] private TMP_Text[] instructionLabels = Array.Empty<TMP_Text>();
+        [SerializeField] private TMP_Text[] feedbackLabels = Array.Empty<TMP_Text>();
         [SerializeField] private TMP_Text[] timerLabels = Array.Empty<TMP_Text>();
         [SerializeField] private TMP_Text[] reportLabels = Array.Empty<TMP_Text>();
         [SerializeField] private GameObject[] modeSelectionPanels = Array.Empty<GameObject>();
@@ -30,6 +32,7 @@ namespace Team5.qPCR
         private int stepIndex = -1;
         private float stepElapsed;
         private float forcedHintRemaining;
+        private float feedbackRemaining;
         private bool active;
         private bool resetting;
 
@@ -40,11 +43,13 @@ namespace Team5.qPCR
         public bool IsActive => active;
         public LessonStepDefinition CurrentStep => stepIndex >= 0 && stepIndex < steps.Length ? steps[stepIndex] : null;
         public TrainingAction CurrentAction => CurrentStep?.RequiredAction ?? TrainingAction.None;
+        public string CurrentTargetLabel => CurrentStep?.TargetLabel ?? string.Empty;
 
         public void Configure(WorkflowController flow, PlateController plateController, InstrumentController instrumentController,
             ProtocolSetupController protocolController, ResultsController resultController, NarrationController narrator,
             GuidanceCueController cueController, LessonStepDefinition[] lessonSteps, TMP_Text[] selectedModeLabels,
-            TMP_Text[] currentStepLabels, TMP_Text[] currentInstructionLabels,
+            TMP_Text[] currentStepLabels, TMP_Text[] currentTargetLabels, TMP_Text[] currentInstructionLabels,
+            TMP_Text[] actionFeedbackLabels,
             TMP_Text[] elapsedLabels, TMP_Text[] summaryLabels, GameObject[] selectionPanels, GameObject[] finalPanels)
         {
             workflow = flow;
@@ -57,7 +62,9 @@ namespace Team5.qPCR
             steps = lessonSteps ?? Array.Empty<LessonStepDefinition>();
             modeLabels = selectedModeLabels ?? Array.Empty<TMP_Text>();
             stepLabels = currentStepLabels ?? Array.Empty<TMP_Text>();
+            targetLabels = currentTargetLabels ?? Array.Empty<TMP_Text>();
             instructionLabels = currentInstructionLabels ?? Array.Empty<TMP_Text>();
+            feedbackLabels = actionFeedbackLabels ?? Array.Empty<TMP_Text>();
             timerLabels = elapsedLabels ?? Array.Empty<TMP_Text>();
             reportLabels = summaryLabels ?? Array.Empty<TMP_Text>();
             modeSelectionPanels = selectionPanels ?? Array.Empty<GameObject>();
@@ -98,6 +105,11 @@ namespace Team5.qPCR
             report.Tick(delta);
             stepElapsed += delta;
             forcedHintRemaining = Mathf.Max(0f, forcedHintRemaining - delta);
+            if (feedbackRemaining > 0f)
+            {
+                feedbackRemaining = Mathf.Max(0f, feedbackRemaining - delta);
+                if (feedbackRemaining <= 0f) SetText(feedbackLabels, string.Empty);
+            }
             SetText(timerLabels, $"{Mathf.FloorToInt(report.ElapsedSeconds / 60f):00}:{Mathf.FloorToInt(report.ElapsedSeconds % 60f):00}   " +
                 $"Mistakes {report.Mistakes}   Hints {report.HintsUsed}");
             guidance?.UpdateCue(stepElapsed, Mode == LessonMode.GuidedTraining, forcedHintRemaining > 0f,
@@ -109,11 +121,11 @@ namespace Team5.qPCR
 
         public void StartLesson(LessonMode selectedMode)
         {
-            ResetLesson();
+            ResetLessonState(false);
             Mode = selectedMode;
             report.Begin(selectedMode);
             active = true;
-            SetActive(modeSelectionPanels, false);
+            SetModeSelectionVisible(false);
             SetActive(completionPanels, false);
             SetText(modeLabels, selectedMode == LessonMode.GuidedTraining ? "Guided Training" : "Assessment Mode");
             workflow?.BeginLesson();
@@ -124,29 +136,27 @@ namespace Team5.qPCR
         {
             if (!active || CurrentStep == null)
             {
+                ReportRejectedAction(action, "Choose Guided Training or Assessment Mode first.");
                 return false;
             }
 
             if (action == TrainingAction.InterpretControlsFailed)
             {
-                report.RecordMistake();
+                ReportRejectedAction(action, "The controls do not pass: the positive control must amplify and the NTC must remain flat.");
                 workflow?.InterpretControls(false);
-                ActionEvaluated?.Invoke(action, false);
                 return false;
             }
 
             if (action != CurrentStep.RequiredAction)
             {
-                report.RecordMistake();
-                ActionEvaluated?.Invoke(action, false);
+                ReportRejectedAction(action, $"Complete the current task first: {CurrentTargetLabel.ToLowerInvariant()}.");
                 return false;
             }
 
             var accepted = PerformScientificAction(action);
             if (!accepted)
             {
-                report.RecordMistake();
-                ActionEvaluated?.Invoke(action, false);
+                ReportRejectedAction(action, $"That action is not ready yet. Check the current target: {CurrentTargetLabel}.");
                 return false;
             }
 
@@ -222,8 +232,17 @@ namespace Team5.qPCR
 
         public void ReportRejectedAction(TrainingAction attemptedAction)
         {
-            if (!active) return;
-            report.RecordMistake();
+            ReportRejectedAction(attemptedAction,
+                active && CurrentStep != null
+                    ? $"Complete the current task first: {CurrentTargetLabel.ToLowerInvariant()}."
+                    : "Choose Guided Training or Assessment Mode first.");
+        }
+
+        public void ReportRejectedAction(TrainingAction attemptedAction, string message)
+        {
+            if (active) report.RecordMistake();
+            SetText(feedbackLabels, message ?? string.Empty);
+            feedbackRemaining = 4f;
             ActionEvaluated?.Invoke(attemptedAction, false);
         }
 
@@ -234,23 +253,31 @@ namespace Team5.qPCR
 
         public void ResetLesson()
         {
+            ResetLessonState(true);
+        }
+
+        private void ResetLessonState(bool showModeSelection)
+        {
             if (resetting) return;
             resetting = true;
             active = false;
             stepIndex = -1;
             stepElapsed = 0f;
             forcedHintRemaining = 0f;
+            feedbackRemaining = 0f;
             plateSocket?.ResetSocket();
             workflow?.ResetExperience();
             narration?.ResetNarration();
             guidance?.HideAll();
-            SetActive(modeSelectionPanels, true);
+            SetModeSelectionVisible(showModeSelection);
             SetActive(completionPanels, false);
             SetActive(protocolPanels, false);
             SetActive(resultsPanels, false);
             SetText(modeLabels, "Choose a mode");
             SetText(stepLabels, "IGH Genomics Training Lab");
+            SetText(targetLabels, "Current target: Choose a lesson mode");
             SetText(instructionLabels, "Select Guided Training for full narration and cues, or Assessment Mode to practise with minimal help.");
+            SetText(feedbackLabels, string.Empty);
             SetText(timerLabels, "00:00   Mistakes 0   Hints 0");
             resetting = false;
         }
@@ -284,7 +311,10 @@ namespace Team5.qPCR
             var step = CurrentStep;
             if (step == null) return;
             SetText(stepLabels, step.Title);
+            SetText(targetLabels, "Current target: " + step.TargetLabel);
             SetText(instructionLabels, step.Instruction);
+            SetText(feedbackLabels, string.Empty);
+            feedbackRemaining = 0f;
             guidance?.SetTarget(step.RequiredAction, Mode == LessonMode.GuidedTraining);
             narration?.Play(step.NarrationKey, step.Title, step.Instruction + " " + step.Explanation);
             StepChanged?.Invoke(step);
@@ -298,6 +328,7 @@ namespace Team5.qPCR
             SetText(reportLabels, report.Summary);
             SetActive(completionPanels, true);
             SetText(stepLabels, "Lesson complete");
+            SetText(targetLabels, "Current target: Complete");
             const string completeMessage = "You inspected the handoff, configured the instrument, loaded the plate and interpreted the controls.";
             SetText(instructionLabels, completeMessage);
             narration?.Play("Complete", "Lesson complete", completeMessage);
@@ -319,6 +350,23 @@ namespace Team5.qPCR
         {
             if (targets == null) return;
             foreach (var target in targets) if (target != null) target.SetActive(value);
+        }
+
+        private void SetModeSelectionVisible(bool visible)
+        {
+            if (modeSelectionPanels == null) return;
+            foreach (var panel in modeSelectionPanels)
+            {
+                if (panel == null) continue;
+                var group = panel.GetComponent<CanvasGroup>();
+                if (group != null)
+                {
+                    group.alpha = visible ? 1f : 0f;
+                    group.interactable = visible;
+                    group.blocksRaycasts = visible;
+                }
+                panel.SetActive(visible);
+            }
         }
     }
 }

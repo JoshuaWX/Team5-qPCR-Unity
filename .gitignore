@@ -114,3 +114,19 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Local-only development history and superseded generated assets.
+# The final project uses Team5_qPCR_RealisticLab and the team's Our-design FBXs.
+/Assets/Scenes/SampleScene.unity*
+/Assets/Team5/Scenes/Team5_qPCR_LoadAndRun.unity*
+/Assets/Editor/ProjectBootstrap/Team5ProjectBuilder.cs*
+/Assets/Team5/Models/Redesign.zip*
+/Assets/Team5/Models/Redesign/Clinical_Instrument.fbx*
+/Assets/Team5/Models/Redesign/Clinical_Drawer.fbx*
+/Assets/Team5/Models/Redesign/Clinical_Microtube.fbx*
+/LocalBackups/
+/Screenshots/
+/Assets/Temp/
+/Assets/Temp.meta
+# Superseded material conversion attempts, retained locally only.
+/Assets/Team5/Materials/RealisticLab/Artist_*_Artist_*.mat*

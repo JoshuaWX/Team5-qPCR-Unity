@@ -27,10 +27,15 @@ namespace Team5.qPCR
             socketScaleMode = SocketScaleMode.None;
             showInteractableHoverMeshes = true;
             recycleDelayTime = 0.2f;
+            keepSelectedTargetValid = true;
         }
 
         public override bool CanSelect(IXRSelectInteractable interactable)
         {
+            // Loading advances the lesson immediately. Do not invalidate the existing socket
+            // selection merely because the learner is now closing the drawer or running PCR.
+            if (IsPlateSeated && firstInteractableSelected == interactable)
+                return base.CanSelect(interactable);
             return base.CanSelect(interactable) && IsExpectedPlate(interactable) && IsReady() && IsOrientationValid(interactable.transform);
         }
 

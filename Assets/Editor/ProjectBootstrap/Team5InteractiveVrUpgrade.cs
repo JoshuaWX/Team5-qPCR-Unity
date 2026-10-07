@@ -12,13 +12,14 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using Object = UnityEngine.Object;
 
 namespace Team5.qPCR.Editor
 {
     /// <summary>
     /// Adds the narrated, object-driven VR lesson to the existing realistic laboratory.
-    /// Only the generated INTERACTIVE_VR_LESSON subtree is rebuilt; scientific systems and authored lab objects survive.
+    /// Generated objects are marked and replaced so repeated runs remain idempotent.
     /// </summary>
     public static class Team5InteractiveVrUpgrade
     {
@@ -56,8 +57,7 @@ namespace Team5.qPCR.Editor
             BackupScene(scene);
             LoadStyleAssets();
 
-            var prior = Find(GeneratedRootName);
-            if (prior != null) Object.DestroyImmediate(prior.gameObject);
+            CleanupGeneratedArtifacts();
 
             var generated = new GameObject(GeneratedRootName).transform;
             var workflow = Require<WorkflowController>();
@@ -92,7 +92,8 @@ namespace Team5.qPCR.Editor
             var steps = BuildSteps();
             lesson.Configure(workflow, plate, instrument, protocol, results, narration, guidance, steps,
                 new[] { desktopHud.Mode, xrHud.Mode }, new[] { desktopHud.StepTitle, xrHud.StepTitle },
-                new[] { desktopHud.Instruction, xrHud.Instruction }, new[] { desktopHud.Timer, xrHud.Timer },
+                new[] { desktopHud.Target, xrHud.Target }, new[] { desktopHud.Instruction, xrHud.Instruction },
+                new[] { desktopHud.Feedback, xrHud.Feedback }, new[] { desktopHud.Timer, xrHud.Timer },
                 new[] { desktopHud.Report, xrHud.Report }, new[] { desktopHud.ModePanel, xrHud.ModePanel },
                 new[] { desktopHud.CompletionPanel, xrHud.CompletionPanel });
 
@@ -116,11 +117,13 @@ namespace Team5.qPCR.Editor
                 new[] { desktopHud.Replay, xrHud.Replay }, cues);
 
             launcher.Configure(shell, lesson, new[] { desktopHud.SimulatorHelp, xrHud.SimulatorHelp },
-                new[] { desktopHud.PreviewStatus, xrHud.PreviewStatus });
+                new[] { desktopHud.PreviewStatus, xrHud.PreviewStatus },
+                new[] { desktopHud.DesktopPreview, xrHud.DesktopPreview },
+                new[] { desktopHud.XrPreview, xrHud.XrPreview });
             WireHudButtons(desktopHud, lesson, narration, launcher);
             WireHudButtons(xrHud, lesson, narration, launcher);
 
-            AddBlueGlovedHands();
+            AddHandsAndControllerFallback();
             EnsureXrCameraIsMain();
             EnsureModeSpecificAudioListeners();
 
@@ -156,6 +159,93 @@ namespace Team5.qPCR.Editor
                 throw new InvalidOperationException("The Source Sans 3 fonts and rounded UI sprite are required.");
             cueMaterial = EnsureMaterial("M_LessonCue", Blue, true);
             gloveMaterial = EnsureMaterial("M_BlueNitrileGlove", Hex("2C6FD6"), false);
+        }
+
+        private static void CleanupGeneratedArtifacts()
+        {
+            var markers = Object.FindObjectsByType<InteractiveVrGeneratedArtifact>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Where(marker => marker != null)
+                .ToArray();
+            foreach (var marker in markers.Where(candidate =>
+                         !candidate.GetComponentsInParent<InteractiveVrGeneratedArtifact>(true)
+                             .Any(parent => parent != candidate)))
+            {
+                if (marker != null) Object.DestroyImmediate(marker.gameObject);
+            }
+
+            var legacyNames = new HashSet<string>
+            {
+                GeneratedRootName,
+                "DESKTOP_INTERACTIVE_LESSON_UI",
+                "XR_INTERACTIVE_LESSON_UI",
+                "PHYSICAL_MACHINE_CONTROLS",
+                "A1_ORIENTATION_SENSITIVE_PLATE_SOCKET",
+                "Seat_Plate_Guidance_Target",
+                "Tour_PreparedPlate_Target",
+                "Tour_OpticalSeal_Target",
+                "Tour_Instrument_Target",
+                "Tour_Touchscreen_Target",
+                "Tour_Drawer_Target",
+                "Tour_ThermalBlock_Target",
+                "Inspect_PlateId_Target",
+                "Inspect_Seal_Target",
+                "Inspect_Bubbles_Target",
+                "Inspect_A1_Target",
+                "Validate_Protocol",
+                "Controls_Pass",
+                "Controls_Fail",
+                "Left_Blue_Gloved_Hand",
+                "Right_Blue_Gloved_Hand",
+                "TRACKED_HAND_INTERACTION_GROUPS"
+            };
+            foreach (var target in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                         .Where(item => item != null && legacyNames.Contains(item.name))
+                         .OrderByDescending(item => GetDepth(item))
+                         .ToArray())
+            {
+                if (target != null) Object.DestroyImmediate(target.gameObject);
+            }
+
+            foreach (var descriptor in Object.FindObjectsByType<LabObjectDescriptor>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None)
+                         .Where(item => item != null &&
+                                        (item.Action == TrainingAction.ValidateProtocol ||
+                                         item.Action == TrainingAction.InterpretControlsPassed))
+                         .ToArray())
+            {
+                Object.DestroyImmediate(descriptor);
+            }
+
+            foreach (var panelName in new[]
+                     {
+                         "Machine_Protocol_Touchscreen", "XR_Protocol_Touchscreen", "Dedicated_Results_Dialogue"
+                     })
+            {
+                foreach (var panel in FindAll(panelName))
+                {
+                    foreach (var label in panel.GetComponentsInChildren<Transform>(true)
+                                 .Where(item => item.name == "Floating_Label").ToArray())
+                        Object.DestroyImmediate(label.gameObject);
+                }
+            }
+        }
+
+        private static int GetDepth(Transform target)
+        {
+            var depth = 0;
+            while (target != null)
+            {
+                depth++;
+                target = target.parent;
+            }
+            return depth;
+        }
+
+        private static T MarkGenerated<T>(T component) where T : Component
+        {
+            Ensure<InteractiveVrGeneratedArtifact>(component.gameObject);
+            return component;
         }
 
         private static void DisableLegacyProgressButtons()
@@ -231,7 +321,8 @@ namespace Team5.qPCR.Editor
 
         private static void BuildPhysicalControls(Transform instrument, GuidedLessonController lesson, List<LabObjectDescriptor> descriptors)
         {
-            var controls = FindOrCreate("PHYSICAL_MACHINE_CONTROLS", instrument);
+            var controls = MarkGenerated(new GameObject("PHYSICAL_MACHINE_CONTROLS").transform);
+            controls.SetParent(instrument, false);
             controls.localPosition = Vector3.zero;
             controls.localRotation = Quaternion.identity;
             controls.localScale = Vector3.one;
@@ -276,17 +367,28 @@ namespace Team5.qPCR.Editor
             rigidbody.isKinematic = true;
             rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             var grab = Ensure<XRGrabInteractable>(plateObject);
-            var plateCollider = plateObject.GetComponent<Collider>() ?? plateObject.AddComponent<BoxCollider>();
+            var plateCollider = Ensure<BoxCollider>(plateObject);
+            plateCollider.center = new Vector3(0,.008f,0);
+            plateCollider.size = new Vector3(.12776f,.018f,.08548f);
+            plateCollider.enabled = true;
             grab.colliders.Clear();
             grab.colliders.Add(plateCollider);
             grab.throwOnDetach = false;
+            grab.movementType = XRBaseInteractable.MovementType.Instantaneous;
             grab.useDynamicAttach = true;
-            Ensure<LessonPlateGrabGate>(plateObject).Configure(lesson, workflow, grab);
+            grab.enabled = false;
+            var earlyAttemptBlocker = Ensure<XRSimpleInteractable>(plateObject);
+            earlyAttemptBlocker.enabled = true;
+            earlyAttemptBlocker.colliders.Clear();
+            earlyAttemptBlocker.colliders.Add(plateCollider);
+            var plateFeedback = descriptors.FirstOrDefault(item => item.Action == TrainingAction.TourPreparedPlate);
+            Ensure<LessonPlateGrabGate>(plateObject).Configure(lesson, workflow, grab, earlyAttemptBlocker, plateFeedback);
             Ensure<PlateDropRecovery>(plateObject).Configure(RequireTransform("Prepared_Plate_Home_Anchor"), instrument, grab, -.35f);
 
             var drawer = RequireTransform("Motorized_Plate_Drawer");
             var anchor = RequireTransform("A1_ALIGNED_PLATE_ANCHOR");
             var socketObject = new GameObject("A1_ORIENTATION_SENSITIVE_PLATE_SOCKET");
+            MarkGenerated(socketObject.transform);
             socketObject.transform.SetParent(drawer, false);
             socketObject.transform.localPosition = anchor.localPosition;
             socketObject.transform.localRotation = anchor.localRotation;
@@ -305,16 +407,15 @@ namespace Team5.qPCR.Editor
             List<LabObjectDescriptor> descriptors)
         {
             var button = UiButton("Validate_Protocol", panel, "Validate protocol", Blue);
+            MarkGenerated(button.transform);
             var rect = button.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(.68f, .015f);
             rect.anchorMax = new Vector2(.96f, xr ? .085f : .075f);
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             button.gameObject.AddComponent<LessonUiActionButton>().Configure(lesson, TrainingAction.ValidateProtocol, button);
 
-            var descriptor = panel.gameObject.AddComponent<LabObjectDescriptor>();
-            var label = BuildWorldLabel(panel, "Protocol validation", Vector3.zero);
-            descriptor.Configure("Protocol validation", "All required values must match the teaching protocol.",
-                TrainingAction.ValidateProtocol, lesson, null, null, panel, label.Group, label.Text, false);
+            var descriptor = CreatePanelDescriptor(panel, "Protocol_Validation_Target", "Protocol validation",
+                "All required values must match the teaching protocol.", TrainingAction.ValidateProtocol, lesson);
             descriptors.Add(descriptor);
         }
 
@@ -322,6 +423,7 @@ namespace Team5.qPCR.Editor
             List<LabObjectDescriptor> descriptors)
         {
             var pass = UiButton("Controls_Pass", panel, "Positive control amplified · NTC stayed flat", Green);
+            MarkGenerated(pass.transform);
             var passRect = pass.GetComponent<RectTransform>();
             passRect.anchorMin = new Vector2(.04f, .008f);
             passRect.anchorMax = new Vector2(.70f, xr ? .065f : .055f);
@@ -329,16 +431,16 @@ namespace Team5.qPCR.Editor
             pass.gameObject.AddComponent<LessonUiActionButton>().Configure(lesson, TrainingAction.InterpretControlsPassed, pass);
 
             var fail = UiButton("Controls_Fail", panel, "Controls failed", Red);
+            MarkGenerated(fail.transform);
             var failRect = fail.GetComponent<RectTransform>();
             failRect.anchorMin = new Vector2(.72f, .008f);
             failRect.anchorMax = new Vector2(.96f, xr ? .065f : .055f);
             failRect.offsetMin = failRect.offsetMax = Vector2.zero;
             fail.gameObject.AddComponent<LessonUiActionButton>().Configure(lesson, TrainingAction.InterpretControlsFailed, fail);
 
-            var descriptor = panel.gameObject.AddComponent<LabObjectDescriptor>();
-            var label = BuildWorldLabel(panel, "Interpret the controls", Vector3.zero);
-            descriptor.Configure("Interpret the controls", "The positive control must amplify and the NTC must remain flat.",
-                TrainingAction.InterpretControlsPassed, lesson, null, null, panel, label.Group, label.Text, false);
+            var descriptor = CreatePanelDescriptor(panel, "Control_Interpretation_Target", "Interpret the controls",
+                "The positive control must amplify and the NTC must remain flat.",
+                TrainingAction.InterpretControlsPassed, lesson);
             descriptors.Add(descriptor);
         }
 
@@ -346,6 +448,7 @@ namespace Team5.qPCR.Editor
             NarrationController narration, PresentationLauncherController launcher)
         {
             var root = UiPanel(xr ? "XR_INTERACTIVE_LESSON_UI" : "DESKTOP_INTERACTIVE_LESSON_UI", canvas, Color.clear);
+            MarkGenerated(root);
             Stretch(root);
             root.GetComponent<Image>().raycastTarget = false;
 
@@ -354,46 +457,52 @@ namespace Team5.qPCR.Editor
             if (xr)
             {
                 cardRect.anchorMin = new Vector2(.01f, .03f);
-                cardRect.anchorMax = new Vector2(.45f, .50f);
+                cardRect.anchorMax = new Vector2(.45f, .56f);
             }
             else
             {
                 cardRect.anchorMin = new Vector2(0f, 0f);
                 cardRect.anchorMax = new Vector2(0f, 0f);
-                cardRect.anchoredPosition = new Vector2(276f, 154f);
-                cardRect.sizeDelta = new Vector2(520f, 270f);
+                cardRect.anchoredPosition = new Vector2(276f, 180f);
+                cardRect.sizeDelta = new Vector2(520f, 320f);
             }
             AddOutline(card.gameObject);
 
             var mode = UiText("Lesson_Mode", card, "Choose a mode", xr ? 19 : 15, true, Blue);
-            SetRect(mode.rectTransform, .05f, .88f, .48f, .98f);
+            SetRect(mode.rectTransform, .05f, .91f, .48f, .98f);
             var timer = UiText("Session_Timer", card, "00:00   Mistakes 0   Hints 0", xr ? 18 : 14, false, Hex("5B6C82"));
-            SetRect(timer.rectTransform, .48f, .88f, .96f, .98f, TextAlignmentOptions.Right);
+            SetRect(timer.rectTransform, .48f, .91f, .96f, .98f, TextAlignmentOptions.Right);
             var title = UiText("Lesson_Step_Title", card, "IGH Genomics Training Lab", xr ? 30 : 26, true, Navy);
-            SetRect(title.rectTransform, .05f, .70f, .96f, .88f);
+            SetRect(title.rectTransform, .05f, .76f, .96f, .91f);
+            var target = UiText("Current_Target", card, "Current target: Choose a lesson mode", xr ? 19 : 15, true, Blue);
+            target.textWrappingMode = TextWrappingModes.Normal;
+            SetRect(target.rectTransform, .05f, .68f, .96f, .76f, TextAlignmentOptions.TopLeft);
             var instruction = UiText("Lesson_Instruction", card,
                 "Choose Guided Training for narration and cues, or Assessment Mode for minimal help.", xr ? 21 : 17, false, Navy);
             instruction.textWrappingMode = TextWrappingModes.Normal;
-            SetRect(instruction.rectTransform, .05f, .43f, .96f, .71f, TextAlignmentOptions.TopLeft);
+            SetRect(instruction.rectTransform, .05f, .46f, .96f, .68f, TextAlignmentOptions.TopLeft);
             var captionTitle = UiText("Caption_Title", card, "Narration", xr ? 18 : 14, true, Blue);
-            SetRect(captionTitle.rectTransform, .05f, .34f, .30f, .43f);
+            SetRect(captionTitle.rectTransform, .05f, .38f, .30f, .46f);
             var caption = UiText("Narration_Caption", card, "Temporary computer narration is matched to this caption.", xr ? 18 : 14, false, Hex("4C6078"));
             caption.textWrappingMode = TextWrappingModes.Normal;
-            SetRect(caption.rectTransform, .28f, .25f, .96f, .43f, TextAlignmentOptions.TopLeft);
+            SetRect(caption.rectTransform, .28f, .29f, .96f, .46f, TextAlignmentOptions.TopLeft);
             var hint = UiText("Timed_Hint", card, "", xr ? 18 : 14, true, Amber);
             hint.textWrappingMode = TextWrappingModes.Normal;
-            SetRect(hint.rectTransform, .05f, .16f, .96f, .25f);
+            SetRect(hint.rectTransform, .05f, .21f, .96f, .29f);
+            var feedback = UiText("Action_Feedback", card, "", xr ? 18 : 14, true, Red);
+            feedback.textWrappingMode = TextWrappingModes.Normal;
+            SetRect(feedback.rectTransform, .05f, .13f, .96f, .21f);
 
             var help = UiButton("Help", card, "Help", PaleBlue);
-            SetRect((RectTransform)help.transform, .05f, .03f, .19f, .15f);
+            SetRect((RectTransform)help.transform, .05f, .02f, .19f, .12f);
             var replay = UiButton("Replay", card, "Replay", PaleBlue);
-            SetRect((RectTransform)replay.transform, .20f, .03f, .36f, .15f);
+            SetRect((RectTransform)replay.transform, .20f, .02f, .36f, .12f);
             var mute = UiToggle("Mute", card, "Mute");
-            SetRect((RectTransform)mute.transform, .37f, .03f, .54f, .15f);
+            SetRect((RectTransform)mute.transform, .37f, .02f, .54f, .12f);
             var reset = UiButton("Reset", card, "Reset lesson", PaleBlue);
-            SetRect((RectTransform)reset.transform, .55f, .03f, .75f, .15f);
+            SetRect((RectTransform)reset.transform, .55f, .02f, .75f, .12f);
             var volume = UiSlider("Narration_Volume", card);
-            SetRect((RectTransform)volume.transform, .77f, .055f, .96f, .13f);
+            SetRect((RectTransform)volume.transform, .77f, .045f, .96f, .105f);
             volume.minValue = 0f;
             volume.maxValue = 1f;
             volume.value = .82f;
@@ -408,6 +517,7 @@ namespace Team5.qPCR.Editor
                 modeRect.anchoredPosition = new Vector2(0f, 40f);
             }
             AddOutline(modePanel.gameObject);
+            Ensure<CanvasGroup>(modePanel.gameObject);
             var welcome = UiText("Mode_Heading", modePanel, "IGH Genomics Training Lab", xr ? 34 : 30, true, Navy);
             SetRect(welcome.rectTransform, .06f, .69f, .94f, .94f, TextAlignmentOptions.Center);
             var intro = UiText("Mode_Description", modePanel,
@@ -454,20 +564,20 @@ namespace Team5.qPCR.Editor
             SetRect(previewStatus.rectTransform, .02f, .04f, .98f, .41f, TextAlignmentOptions.Center);
 
             var simulatorHelp = UiPanel("Simulator_Control_Guide", root, Color.white);
-            if (xr) SetRect((RectTransform)simulatorHelp, .58f, .22f, .985f, .66f);
+            if (xr) SetRect((RectTransform)simulatorHelp, .56f, .16f, .985f, .72f);
             else
             {
                 var helpRect = (RectTransform)simulatorHelp;
                 helpRect.anchorMin = helpRect.anchorMax = new Vector2(1f, .5f);
                 helpRect.pivot = new Vector2(1f, .5f);
                 helpRect.anchoredPosition = new Vector2(-22f, 0f);
-                helpRect.sizeDelta = new Vector2(430f, 390f);
+                helpRect.sizeDelta = new Vector2(450f, 470f);
             }
             AddOutline(simulatorHelp.gameObject);
             var helpTitle = UiText("Simulator_Guide_Title", simulatorHelp, "XR Simulator controls", xr ? 30 : 26, true, Navy);
             SetRect(helpTitle.rectTransform, .07f, .82f, .93f, .95f);
             var helpText = UiText("Simulator_Guide_Text", simulatorHelp,
-                "WASD/QE       Move selected simulated device\nH             Manipulate the head\n[ and ]       Select left/right controller\nRight mouse   Rotate\nT             Trigger\nG             Grip\nTab           Cycle simulated devices\nR             Reset simulator pose",
+                "WASD/QE       Move selected simulated device\nH             Manipulate the head\n[ and ]       Select left/right controller\nRight mouse   Rotate\nG             Select / grip 3D objects\nT             UI trigger / activate\nTab           Cycle controllers/hands\nK             Grab hand pose\nM             Pinch hand pose\nN             Poke hand pose\nO             Open hand\nP             Fist\nR             Reset simulator pose",
                 xr ? 20 : 17, false, Navy);
             helpText.textWrappingMode = TextWrappingModes.NoWrap;
             SetRect(helpText.rectTransform, .08f, .12f, .92f, .80f, TextAlignmentOptions.TopLeft);
@@ -478,7 +588,8 @@ namespace Team5.qPCR.Editor
             return new HudReferences
             {
                 Root = root.gameObject, ModePanel = modePanel.gameObject, CompletionPanel = completion.gameObject,
-                Mode = mode, StepTitle = title, Instruction = instruction, Timer = timer, Report = report,
+                Mode = mode, StepTitle = title, Target = target, Instruction = instruction, Feedback = feedback,
+                Timer = timer, Report = report,
                 CaptionTitle = captionTitle, Caption = caption, Hint = hint, Volume = volume, Mute = mute,
                 Replay = replay, Help = help, Reset = reset, StartGuided = guided, StartAssessment = assessment,
                 ResetAfterComplete = again, DesktopPreview = desktop, XrPreview = simulator,
@@ -507,34 +618,34 @@ namespace Team5.qPCR.Editor
 
         private static LessonStepDefinition[] BuildSteps() => new[]
         {
-            Step(TrainingAction.TourLabCoat, "Welcome to IGH Genomics", "Point at and select the lab coat.", "The lab coat is part of personal protective equipment."),
-            Step(TrainingAction.TourGloves, "Protect your hands", "Select the blue nitrile gloves.", "Clean gloves reduce contamination and protect the learner."),
-            Step(TrainingAction.TourSink, "Handwashing area", "Select the laboratory sink.", "Hand hygiene comes before and after laboratory work."),
-            Step(TrainingAction.TourPreparedPlate, "Team 4 handoff", "Select the prepared qPCR plate.", "Team 5 receives a filled, mapped and sealed plate; it does not remix the reactions."),
-            Step(TrainingAction.TourOpticalSeal, "Optical seal", "Select the transparent seal on top of the plate.", "The instrument reads fluorescence through this seal."),
-            Step(TrainingAction.TourInstrument, "qPCR instrument", "Select the real-time PCR machine.", "It changes temperature and measures fluorescence during the run."),
-            Step(TrainingAction.TourTouchscreen, "Instrument touchscreen", "Select the touchscreen.", "This is where the protocol is checked before loading."),
-            Step(TrainingAction.TourDrawer, "Motorized drawer", "Select the plate drawer.", "The drawer carries the plate into the instrument."),
-            Step(TrainingAction.TourThermalBlock, "Thermal block", "Select the thermal block inside the drawer.", "The block performs denaturation, annealing and extension temperatures."),
-            Step(TrainingAction.TourMonitor, "Results monitor", "Select the monitor.", "Amplification curves and control results appear here."),
-            Step(TrainingAction.TourCentrifuge, "Plate centrifuge", "Select the plate centrifuge.", "It is background equipment in Team 5, but explains how liquid is collected before handoff."),
-            Step(TrainingAction.TourWaste, "Waste containers", "Select the biohazard waste container to finish the lab tour.", "Correct waste separation is part of safe laboratory work."),
-            Step(TrainingAction.PowerOnInstrument, "Power on", "Physically press the green Power button on the machine.", "The instrument must be powered before its controls unlock."),
-            Step(TrainingAction.ValidateProtocol, "Configure the qPCR run", "Review the touchscreen values, correct any red field, then press Validate protocol.", "This teaching programme uses 35 cycles and fluorescence acquisition at 60 degrees Celsius."),
-            Step(TrainingAction.InspectPlateId, "Check the plate ID", "Select the plate ID label.", "The ID confirms the plate belongs to this run."),
-            Step(TrainingAction.InspectOpticalSeal, "Inspect the seal", "Select the optical seal checkpoint.", "The seal must be intact and firmly attached."),
-            Step(TrainingAction.InspectBubbles, "Inspect for bubbles", "Select the bubble-check area.", "Large bubbles can disturb the fluorescence reading."),
-            Step(TrainingAction.InspectA1Marker, "Find A1", "Select the A1 marker at the reference corner.", "A1 tells you which way the plate must face."),
-            Step(TrainingAction.OpenDrawer, "Open the drawer", "Press the blue drawer-open button.", "The motorized drawer exposes the loading socket."),
-            Step(TrainingAction.SeatPlate, "Load the plate", "Grip the plate with either controller, align A1, and place it in the socket.", "Wrongly rotated plates are rejected and cannot snap into place."),
-            Step(TrainingAction.CloseDrawer, "Close the drawer", "Press the amber drawer-close button.", "The drawer only closes after the plate is correctly seated."),
-            Step(TrainingAction.StartRun, "Start amplification", "Press the green Start button.", "Final scientific validation runs before the 35-cycle simulation begins."),
-            Step(TrainingAction.ObserveAmplification, "Observe 35 cycles", "Watch the temperature, cycle counter and amplification curves build.", "The educational run is compressed to about 30 seconds."),
-            Step(TrainingAction.InterpretControlsPassed, "Interpret the controls", "Choose the statement that correctly describes the positive control and NTC.", "The positive control must amplify. The no-template control must stay flat."),
+            Step(TrainingAction.TourLabCoat, "Lab coat", "Welcome to IGH Genomics", "Point at and select the lab coat.", "The lab coat is part of personal protective equipment."),
+            Step(TrainingAction.TourGloves, "Blue nitrile gloves", "Protect your hands", "Select the blue nitrile gloves.", "Clean gloves reduce contamination and protect the learner."),
+            Step(TrainingAction.TourSink, "Handwashing sink", "Handwashing area", "Select the laboratory sink.", "Hand hygiene comes before and after laboratory work."),
+            Step(TrainingAction.TourPreparedPlate, "Prepared qPCR plate", "Team 4 handoff", "Select the prepared qPCR plate.", "Team 5 receives a filled, mapped and sealed plate; it does not remix the reactions."),
+            Step(TrainingAction.TourOpticalSeal, "Optical seal", "Optical seal", "Select the transparent seal on top of the plate.", "The instrument reads fluorescence through this seal."),
+            Step(TrainingAction.TourInstrument, "Real-time PCR machine", "qPCR instrument", "Select the real-time PCR machine.", "It changes temperature and measures fluorescence during the run."),
+            Step(TrainingAction.TourTouchscreen, "Instrument touchscreen", "Instrument touchscreen", "Select the touchscreen.", "This is where the protocol is checked before loading."),
+            Step(TrainingAction.TourDrawer, "Motorized drawer", "Motorized drawer", "Select the plate drawer.", "The drawer carries the plate into the instrument."),
+            Step(TrainingAction.TourThermalBlock, "Thermal block", "Thermal block", "Select the thermal block inside the drawer.", "The block performs denaturation, annealing and extension temperatures."),
+            Step(TrainingAction.TourMonitor, "Results monitor", "Results monitor", "Select the monitor.", "Amplification curves and control results appear here."),
+            Step(TrainingAction.TourCentrifuge, "Plate centrifuge", "Plate centrifuge", "Select the plate centrifuge.", "It is background equipment in Team 5, but explains how liquid is collected before handoff."),
+            Step(TrainingAction.TourWaste, "Biohazard waste container", "Waste containers", "Select the biohazard waste container to finish the lab tour.", "Correct waste separation is part of safe laboratory work."),
+            Step(TrainingAction.PowerOnInstrument, "Power button", "Power on", "Physically press the green Power button on the machine.", "The instrument must be powered before its controls unlock."),
+            Step(TrainingAction.ValidateProtocol, "Validate protocol button", "Configure the qPCR run", "Review the touchscreen values, correct any red field, then press Validate protocol.", "This teaching programme uses 35 cycles and fluorescence acquisition at 60 degrees Celsius."),
+            Step(TrainingAction.InspectPlateId, "Plate ID", "Check the plate ID", "Select the plate ID label.", "The ID confirms the plate belongs to this run."),
+            Step(TrainingAction.InspectOpticalSeal, "Optical seal checkpoint", "Inspect the seal", "Select the optical seal checkpoint.", "The seal must be intact and firmly attached."),
+            Step(TrainingAction.InspectBubbles, "Bubble-check area", "Inspect for bubbles", "Select the bubble-check area.", "Large bubbles can disturb the fluorescence reading."),
+            Step(TrainingAction.InspectA1Marker, "A1 marker", "Find A1", "Select the A1 marker at the reference corner.", "A1 tells you which way the plate must face."),
+            Step(TrainingAction.OpenDrawer, "Drawer-open button", "Open the drawer", "Press the blue drawer-open button.", "The motorized drawer exposes the loading socket."),
+            Step(TrainingAction.SeatPlate, "Prepared qPCR plate", "Load the plate", "Pinch or grip the plate, align A1, and place it in the socket.", "Wrongly rotated plates are rejected and cannot snap into place."),
+            Step(TrainingAction.CloseDrawer, "Drawer-close button", "Close the drawer", "Press the amber drawer-close button.", "The drawer only closes after the plate is correctly seated."),
+            Step(TrainingAction.StartRun, "Start button", "Start amplification", "Press the green Start button.", "Final scientific validation runs before the 35-cycle simulation begins."),
+            Step(TrainingAction.ObserveAmplification, "Amplification display", "Observe 35 cycles", "Watch the temperature, cycle counter and amplification curves build.", "The educational run is compressed to about 30 seconds."),
+            Step(TrainingAction.InterpretControlsPassed, "Control interpretation", "Interpret the controls", "Choose the statement that correctly describes the positive control and NTC.", "The positive control must amplify. The no-template control must stay flat."),
         };
 
-        private static LessonStepDefinition Step(TrainingAction action, string title, string instruction, string explanation) =>
-            new LessonStepDefinition(action, title, instruction, explanation);
+        private static LessonStepDefinition Step(TrainingAction action, string target, string title, string instruction, string explanation) =>
+            new LessonStepDefinition(action, target, title, instruction, explanation);
 
         private static NarrationCue[] BuildNarrationCues(IEnumerable<LessonStepDefinition> steps)
         {
@@ -553,7 +664,60 @@ namespace Team5.qPCR.Editor
             return list.ToArray();
         }
 
-        private static void AddBlueGlovedHands()
+        private static void AddHandsAndControllerFallback()
+        {
+            AddBlueGlovedControllerHands();
+
+            const string prefabPath =
+                "Assets/Samples/XR Interaction Toolkit/3.3.2/Hands Interaction Demo/Prefabs/XR Origin Hands (XR Rig).prefab";
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefab == null)
+                throw new InvalidOperationException("Import the XRI Hands Interaction Demo sample before building the hand rig.");
+
+            var origin = RequireTransform("XR_ORIGIN_LEFT_RIGHT_CONTROLLERS");
+            var generatedHands = MarkGenerated(new GameObject("TRACKED_HAND_INTERACTION_GROUPS").transform);
+            generatedHands.SetParent(origin, false);
+
+            var sourceLeftHand = FindIn(prefab.transform, "Left Hand");
+            var sourceRightHand = FindIn(prefab.transform, "Right Hand");
+            if (sourceLeftHand == null || sourceRightHand == null)
+                throw new InvalidOperationException("The XRI hands sample does not contain both hand interactor groups.");
+
+            var sourceActions = prefab.GetComponent<InputActionManager>();
+            var destinationActions = Ensure<InputActionManager>(origin.gameObject);
+            if (sourceActions != null)
+            {
+                foreach (var actionAsset in sourceActions.actionAssets)
+                    if (actionAsset != null && !destinationActions.actionAssets.Contains(actionAsset))
+                        destinationActions.actionAssets.Add(actionAsset);
+            }
+
+            var leftHand = Object.Instantiate(sourceLeftHand.gameObject, generatedHands).transform;
+            var rightHand = Object.Instantiate(sourceRightHand.gameObject, generatedHands).transform;
+            leftHand.name = "Left Tracked Hand";
+            rightHand.name = "Right Tracked Hand";
+
+            foreach (var renderer in generatedHands.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                var materials = renderer.sharedMaterials;
+                // Preserve the hand sample shader and its affordance properties (including
+                // _RimPower), then tint a copied material blue. Replacing it with a plain URP/Lit
+                // material causes the hand affordance provider to log an error every frame.
+                for (var index = 0; index < materials.Length; index++)
+                    materials[index] = EnsureTrackedHandMaterial(materials[index], index);
+                renderer.sharedMaterials = materials;
+            }
+
+            var modality = Ensure<XRInputModalityManager>(origin.gameObject);
+            modality.leftHand = leftHand.gameObject;
+            modality.rightHand = rightHand.gameObject;
+            modality.leftController = FindIn(origin, "Left Controller")?.gameObject;
+            modality.rightController = FindIn(origin, "Right Controller")?.gameObject;
+            EditorUtility.SetDirty(modality);
+            EditorUtility.SetDirty(destinationActions);
+        }
+
+        private static void AddBlueGlovedControllerHands()
         {
             var origin = RequireTransform("XR_ORIGIN_LEFT_RIGHT_CONTROLLERS");
             foreach (var side in new[] { "Left Controller", "Right Controller" })
@@ -563,6 +727,7 @@ namespace Team5.qPCR.Editor
                 var prior = FindIn(controller, side.StartsWith("Left") ? "Left_Blue_Gloved_Hand" : "Right_Blue_Gloved_Hand");
                 if (prior != null) Object.DestroyImmediate(prior.gameObject);
                 var hand = new GameObject(side.StartsWith("Left") ? "Left_Blue_Gloved_Hand" : "Right_Blue_Gloved_Hand").transform;
+                MarkGenerated(hand);
                 hand.SetParent(controller, false);
                 hand.localPosition = new Vector3(0f, -.015f, .055f);
                 hand.localRotation = Quaternion.Euler(8f, 0f, 0f);
@@ -578,6 +743,24 @@ namespace Team5.qPCR.Editor
                     new Vector3(.015f, .030f, .015f), gloveMaterial);
                 thumb.transform.localRotation = Quaternion.Euler(70f, 0f, sign * 38f);
             }
+        }
+
+        private static Material EnsureTrackedHandMaterial(Material source, int index)
+        {
+            if (source == null) return gloveMaterial;
+            var safeName = new string(source.name.Select(character => char.IsLetterOrDigit(character) ? character : '_').ToArray());
+            var path = RootPath + "/Materials/InteractiveVR/M_BlueTrackedHand_" + safeName + "_" + index + ".mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(source) { name = "M_BlueTrackedHand_" + safeName };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            var blue = Hex("2C6FD6");
+            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", blue);
+            if (material.HasProperty("_Color")) material.SetColor("_Color", blue);
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         private static void EnsureXrCameraIsMain()
@@ -655,6 +838,7 @@ namespace Team5.qPCR.Editor
             Vector3 size, string displayName, string description, TrainingAction action, GuidedLessonController lesson, bool actionable)
         {
             var proxy = new GameObject(name);
+            MarkGenerated(proxy.transform);
             proxy.transform.SetParent(parent, false);
             proxy.transform.localPosition = localPosition;
             proxy.transform.localRotation = Quaternion.identity;
@@ -666,6 +850,18 @@ namespace Team5.qPCR.Editor
             var descriptor = proxy.AddComponent<LabObjectDescriptor>();
             descriptor.Configure(displayName, description, action, lesson, interactable, line, proxy.transform,
                 label.Group, label.Text, actionable);
+            return descriptor;
+        }
+
+        private static LabObjectDescriptor CreatePanelDescriptor(Transform panel, string name, string displayName,
+            string description, TrainingAction action, GuidedLessonController lesson)
+        {
+            var proxy = MarkGenerated(new GameObject(name).transform);
+            proxy.SetParent(panel, false);
+            var label = BuildWorldLabel(proxy, displayName, Vector3.zero);
+            var descriptor = proxy.gameObject.AddComponent<LabObjectDescriptor>();
+            descriptor.Configure(displayName, description, action, lesson, null, null, panel,
+                label.Group, label.Text, false);
             return descriptor;
         }
 
@@ -921,6 +1117,11 @@ namespace Team5.qPCR.Editor
         private static Transform Find(string name) => Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None)
             .FirstOrDefault(item => item.name == name);
 
+        private static Transform[] FindAll(string name) => Object.FindObjectsByType<Transform>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None)
+            .Where(item => item.name == name)
+            .ToArray();
+
         private static Transform FindIn(Transform root, string name) => root == null ? null : root.GetComponentsInChildren<Transform>(true)
             .FirstOrDefault(item => item.name == name);
 
@@ -940,7 +1141,7 @@ namespace Team5.qPCR.Editor
         private sealed class HudReferences
         {
             public GameObject Root, ModePanel, CompletionPanel, SimulatorHelp;
-            public TMP_Text Mode, StepTitle, Instruction, Timer, Report, CaptionTitle, Caption, Hint, PreviewStatus;
+            public TMP_Text Mode, StepTitle, Target, Instruction, Feedback, Timer, Report, CaptionTitle, Caption, Hint, PreviewStatus;
             public Slider Volume;
             public Toggle Mute;
             public Button Replay, Help, Reset, StartGuided, StartAssessment, ResetAfterComplete;

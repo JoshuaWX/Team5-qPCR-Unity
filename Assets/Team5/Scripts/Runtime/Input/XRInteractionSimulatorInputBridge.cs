@@ -1,7 +1,7 @@
 using System.Reflection;
 using UnityEngine;
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.XR.Interaction.Toolkit.Inputs.Simulation;
@@ -13,12 +13,12 @@ namespace Team5.qPCR
     /// Compatibility bridge for the XRI 3.3.2 Interaction Simulator in Unity 6000.3.
     /// Its immediate InputState.Change calls do not reach the existing simulated
     /// controller devices in this editor combination, while queued state events do.
-    /// This component is editor-only and never participates in OpenXR player input.
+    /// Active only for Editor/Windows simulated devices; never alters real OpenXR input.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class XRInteractionSimulatorInputBridge : MonoBehaviour
     {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
         private static readonly BindingFlags PrivateInstance =
             BindingFlags.Instance | BindingFlags.NonPublic;
 

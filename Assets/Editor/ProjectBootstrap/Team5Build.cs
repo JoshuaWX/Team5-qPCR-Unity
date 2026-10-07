@@ -260,6 +260,10 @@ namespace Team5.qPCR.Editor
                 "UnityEngine.XR.OpenXR.Features.Interactions.MetaQuestTouchPlusControllerProfile");
             EnsureStandaloneValidationFeature(
                 "UnityEngine.XR.OpenXR.Features.CompositionLayers.OpenXRCompositionLayersFeature");
+            EnsureStandaloneValidationFeature(
+                "UnityEngine.XR.Hands.OpenXR.HandTracking");
+            EnsureStandaloneValidationFeature(
+                "UnityEngine.XR.Hands.OpenXR.MetaHandTrackingAim");
             DisableMobileAmbientOcclusion();
 
             EnableOpenXrFeature(openXrSettings,
@@ -270,6 +274,10 @@ namespace Team5.qPCR.Editor
                 "UnityEngine.XR.OpenXR.Features.Interactions.MetaQuestTouchPlusControllerProfile");
             EnableOpenXrFeature(openXrSettings,
                 "UnityEngine.XR.OpenXR.Features.CompositionLayers.OpenXRCompositionLayersFeature");
+            EnableOpenXrFeature(openXrSettings,
+                "UnityEngine.XR.Hands.OpenXR.HandTracking");
+            EnableOpenXrFeature(openXrSettings,
+                "UnityEngine.XR.Hands.OpenXR.MetaHandTrackingAim");
 
             EditorUtility.SetDirty(openXrSettings);
             AssetDatabase.SaveAssets();

@@ -105,7 +105,19 @@ namespace Team5.qPCR.PlayModeTests
             var flow=Object.FindFirstObjectByType<WorkflowController>();
             var grab=Object.FindFirstObjectByType<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
             Assert.IsFalse(grab.enabled,"Grabbing is locked before preparation review");
-            for(var i=0;i<4;i++)flow.HandlePrimaryAction();
+            var lesson=Object.FindFirstObjectByType<GuidedLessonController>(FindObjectsInactive.Include);
+            lesson.StartGuidedTraining();
+            var requiredBeforeLoading=new[]{
+                TrainingAction.TourLabCoat,TrainingAction.TourGloves,TrainingAction.TourSink,
+                TrainingAction.TourPreparedPlate,TrainingAction.TourOpticalSeal,TrainingAction.TourInstrument,
+                TrainingAction.TourTouchscreen,TrainingAction.TourDrawer,TrainingAction.TourThermalBlock,
+                TrainingAction.TourMonitor,TrainingAction.TourCentrifuge,TrainingAction.TourWaste,
+                TrainingAction.PowerOnInstrument,TrainingAction.ValidateProtocol,TrainingAction.InspectPlateId,
+                TrainingAction.InspectOpticalSeal,TrainingAction.InspectBubbles,TrainingAction.InspectA1Marker,
+                TrainingAction.OpenDrawer};
+            foreach(var action in requiredBeforeLoading)
+                Assert.IsTrue(lesson.TryPerformAction(action,null),$"Lesson action {action} should unlock the next step.");
+            Assert.AreEqual(TrainingAction.SeatPlate,lesson.CurrentAction);
             var shell=Object.FindFirstObjectByType<LabShellController>();shell.SetMode(InteractionMode.XR);yield return null;
             yield return new WaitForSeconds(.5f);
             var simulator=Object.FindFirstObjectByType<UnityEngine.XR.Interaction.Toolkit.Inputs.Simulation.XRInteractionSimulator>();
@@ -114,6 +126,7 @@ namespace Team5.qPCR.PlayModeTests
             Assert.IsNotNull(simulator.GetComponent<XRInteractionSimulatorInputBridge>());
             Assert.AreEqual(2,hands.Length,"Both simulated controllers must become tracked and active.");
             Assert.IsTrue(grab.enabled);
+            var stageBeforeGrab=flow.CurrentStage;
             var manager=Object.FindFirstObjectByType<UnityEngine.XR.Interaction.Toolkit.XRInteractionManager>();
             foreach(var hand in hands)
             {
@@ -121,7 +134,7 @@ namespace Team5.qPCR.PlayModeTests
                 Assert.IsTrue(grab.isSelected,"Each controller must be able to select the plate");
                 manager.SelectExit((UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor)hand,grab);
             }
-            Assert.AreEqual(WorkflowStage.PlateInspection,flow.CurrentStage,"A grab must not skip a scientific gate");
+            Assert.AreEqual(stageBeforeGrab,flow.CurrentStage,"A grab must not skip a scientific gate");
             shell.SetMode(InteractionMode.Desktop);flow.ResetExperience();yield return null;
             Assert.IsFalse(grab.enabled);
         }

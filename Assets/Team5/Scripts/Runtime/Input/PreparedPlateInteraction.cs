@@ -16,6 +16,9 @@ namespace Team5.qPCR
         { workflow=flow;grab=interactable;outline=highlight; }
         private void Update()
         {
+            // The narrated lesson owns grabbing and socket retention. The legacy desktop
+            // gate must not disable XRI while the drawer closes or a run begins.
+            if (GetComponent<LessonPlateGrabGate>() != null) return;
             if(workflow==null||grab==null)return;
             var allowed=!workflow.IsBusy && (workflow.CurrentStage==WorkflowStage.PlateInspection || workflow.CurrentStage==WorkflowStage.InstrumentLoading);
             if(grab.enabled!=allowed)grab.enabled=allowed;

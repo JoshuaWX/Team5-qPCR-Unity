@@ -1,6 +1,8 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace Team5.qPCR
 {
@@ -22,6 +24,7 @@ namespace Team5.qPCR
         [SerializeField] private InteractionMode startingMode = InteractionMode.Desktop;
 
         public InteractionMode CurrentMode { get; private set; }
+        public event Action<InteractionMode> ModeChanged;
         private bool desktopOverview = true;
 
         public void SetDesktopOverview(bool overview)
@@ -107,8 +110,18 @@ namespace Team5.qPCR
 
             if (xrSimulatorRoot != null)
             {
-                xrSimulatorRoot.SetActive(xr && Application.isEditor);
+                xrSimulatorRoot.SetActive(xr && (Application.isEditor || !XRSettings.isDeviceActive));
             }
+
+            // Simulated grip values can arrive without a usable one-frame press edge in
+            // this Editor/Input System combination. Hold-to-select preserves grip/release
+            // semantics in the preview; real hardware retains XRI's StateChange default.
+            if (xrOriginRoot != null)
+                foreach (var interactor in xrOriginRoot.GetComponentsInChildren<NearFarInteractor>(true))
+                    if (interactor.transform.parent.name.EndsWith("Controller"))
+                        interactor.selectActionTrigger = xr && (Application.isEditor || !XRSettings.isDeviceActive)
+                            ? XRBaseInputInteractor.InputTriggerType.State
+                            : XRBaseInputInteractor.InputTriggerType.StateChange;
 
             if (desktopUiRoot != null)
             {
@@ -119,6 +132,8 @@ namespace Team5.qPCR
             {
                 xrWorldUiRoot.SetActive(xr);
             }
+
+            ModeChanged?.Invoke(mode);
         }
     }
 }

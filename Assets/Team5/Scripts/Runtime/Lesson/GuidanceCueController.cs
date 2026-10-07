@@ -53,7 +53,7 @@ namespace Team5.qPCR
 
             var pulse = guided && stepElapsed >= 12f || forcedHint;
             var strong = guided && stepElapsed >= 20f || forcedHint;
-            current.SetCurrent(pulse || strong);
+            current.SetCurrent(guided || forcedHint);
             current.SetAttention(strong);
             if (arrow != null)
             {
@@ -77,7 +77,7 @@ namespace Team5.qPCR
             current = null;
             if (descriptors != null)
                 foreach (var descriptor in descriptors)
-                    if (descriptor != null) descriptor.SetCurrent(false);
+                    if (descriptor != null) descriptor.ResetFeedback();
             if (arrow != null) arrow.gameObject.SetActive(false);
             if (hintText != null) hintText.gameObject.SetActive(false);
         }
